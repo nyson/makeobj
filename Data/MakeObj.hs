@@ -3,7 +3,9 @@
 
 
 module Data.MakeObj (
-  Car(..), parseGenerateTree, pp, pprint, randomCar, toStructure, jsonTreeEquality,
+  Car(..), Defs(..), Error(..), TypeLabel(..),
+  parseGenerateTree, parseDefs,
+  pp, pprint, randomCar, toStructure, jsonTreeEquality,
   generateObj
   ) where
 
@@ -15,9 +17,10 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.HashMap.Strict as HM
 import Data.Aeson
+import Data.MakeObj.AST
 import Data.Text (Text)
 import Data.MakeObj.PP (pp, pprint)
-import Data.MakeObj.Parser (parseGenerateTree)
+import Data.MakeObj.Parser hiding (rx)
 import Data.MakeObj.TreeEquality (jsonTreeEquality, toStructure)
 import Text.Reggie (rx, rxGen)
 import qualified Data.Text as T
