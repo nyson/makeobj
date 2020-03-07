@@ -2,7 +2,7 @@
 module Data.MakeObj.GenerateObj where
 
 import Test.QuickCheck
-import Text.Reggie as R
+import qualified Text.Reggie as R
 import qualified Data.Map.Lazy as Map
 import Data.Aeson
 import Data.HashMap.Strict as HM
@@ -13,7 +13,7 @@ import qualified Data.Vector as V
 
 generateObj :: [(TypeLabel, GenerateTree)] -> GenerateTree -> Gen Value
 generateObj defs = \case
-  GRx rx -> String . T.pack <$> rxGen rx
+  GRx rx -> String . T.pack <$> R.rxGen rx
   GType tl -> case Prelude.lookup tl defs of
       Nothing -> error $ "Missing typedef: " ++ pp tl
       Just gt -> generateObj defs gt
@@ -23,3 +23,4 @@ generateObj defs = \case
             -> Gen (a, Value)
           f ds (a, t) = (a,) <$> generateObj ds t
   GList t -> Array . V.fromList <$> listOf (generateObj defs t)
+  GRange (Range a b) -> Number . fromIntegral <$> elements [a .. b]

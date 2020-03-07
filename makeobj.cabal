@@ -46,6 +46,8 @@ executable makeobj
                      , makeobj
                      , scotty
                      , aeson
+                     , aeson-pretty
+                     , containers
                      , bytestring
                      , directory
                      , QuickCheck

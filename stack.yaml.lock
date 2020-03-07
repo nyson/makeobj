@@ -12,6 +12,13 @@ packages:
   original:
     hackage: todo-0.2.0.2
 - completed:
+    hackage: aeson-pretty-0.8.8@sha256:9924a16d0c362ff59dd6d5b875749ff5d599d2688f89d080388a0014714441ef,2291
+    pantry-tree:
+      size: 337
+      sha256: 0e6cc718e70c2cc51726570f2faed6f5cd56e0c23a546198cca2a217213ccc43
+  original:
+    hackage: aeson-pretty-0.8.8
+- completed:
     cabal-file:
       size: 1744
       sha256: c1f819730aa036865b81de96690423ed73a27005c15958a454bd6460d6e07060
@@ -20,11 +27,11 @@ packages:
     git: https://gitlab.com/nyson/reggie.git
     pantry-tree:
       size: 1060
-      sha256: eee47abd24c58bf833bb75d0c3cf490269f6dcebc3e3ca54745a0f918e74e93c
-    commit: 03ebd6915b0f9a4ab47714de8a9a6ea40d090984
+      sha256: ada05d8fb9b16e3693cc4655b2cbf40cb16e917feaaa5aab66a400d869cafdd6
+    commit: a5476dcfaca0e19128a43ae7acb4647b6fd37167
   original:
     git: https://gitlab.com/nyson/reggie.git
-    commit: 03ebd6915b0f9a4ab47714de8a9a6ea40d090984
+    commit: a5476dcfaca0e19128a43ae7acb4647b6fd37167
 snapshots:
 - completed:
     size: 524162

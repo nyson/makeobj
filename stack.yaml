@@ -51,8 +51,9 @@ resolver: lts-14.21
 #
 extra-deps:
   - todo-0.2.0.2
+  - aeson-pretty-0.8.8
   - git: https://gitlab.com/nyson/reggie.git
-    commit: 03ebd6915b0f9a4ab47714de8a9a6ea40d090984
+    commit: a5476dcfaca0e19128a43ae7acb4647b6fd37167
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

@@ -6,7 +6,7 @@ module Data.MakeObj (
   Car(..), Defs(..), Error(..), TypeLabel(..),
   parseGenerateTree, parseDefs,
   pp, pprint, randomCar, toStructure, jsonTreeEquality,
-  generateObj
+  generateObj, mkTypeLabel
   ) where
 
 import Data.MakeObj.GenerateObj (generateObj)

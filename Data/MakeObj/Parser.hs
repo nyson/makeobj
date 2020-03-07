@@ -19,7 +19,7 @@ sc :: Parser t -> Parser t
 sc p = spacer *> p <* spacer
   where spacer = L.space
           space1
-          (L.skipLineComment "//")
+          (L.skipLineComment "--")
           (L.skipBlockComment "/*" "*/")
 
 parseGenerateTree :: String -> Either Error GenerateTree
@@ -28,24 +28,34 @@ parseGenerateTree = parse generateTree ""
 parseDefs :: String -> Either Error Defs
 parseDefs = parse defs ""
 
-newtype Defs = Defs [(TypeLabel, GenerateTree)]
-  deriving Show
-
 defs :: Parser Defs
-defs = Defs <$> label "Defs Config" (
-  many $ (,) <$> sc typeLabel <* sc (char '=')
-             <*> sc generateTree)
+defs = Defs <$> label "Defs Config" (many def)
+  where def = (,)
+              <$> sc typeLabel <* sc (char '=')
+              <*> sc generateTree
 
 generateTree :: Parser GenerateTree
 generateTree = label "GenerateTree" $
   choice [ try $ GObj <$> genObj
          , try $ GList <$> genList
+         , GRange <$> range
          , GRx <$> sc rx
          , GType <$> typeLabel
          ]
 
+chars :: [Char] -> Parser ()
+chars [] = mempty
+chars (c:cs) = char c >> chars cs
+
 rxChar :: Parser Char
-rxChar = label "Char" $ choice $ letterChar:map char "+ ?*{}[]|()-1234567890-"
+rxChar = label "Char" $ choice $ letterChar
+         : map char "+, ?*{}[]|()-1234567890-^"
+
+-- | Parses a range (an inclusive Int to Int generator)
+range :: Parser (Range Int)
+range = label "Int Range" $ Range
+  <$> sc L.decimal <* sc (chars "to")
+  <*> sc L.decimal
 
 rx :: Parser Regex
 rx = label "Regex Parser" $ try $ do
@@ -55,15 +65,16 @@ rx = label "Regex Parser" $ try $ do
     Right rx -> return rx
 
 typeLabel :: Parser TypeLabel
-typeLabel = label "TypeLabel" (TypeLabel <$> some letterChar)
+typeLabel = label "TypeLabel" (TypeLabel . T.pack <$> some letterChar)
 
 genList :: Parser GenerateTree
 genList = label "List" $ char '[' *> sc generateTree <* char ']'
 
 genObj :: Parser (HashMap Text GenerateTree)
-genObj = label "Object" $ HM.fromList <$> (sc (char '{') *> mkMapList <* sc ( char '}'))
+genObj = label "Object" $ HM.fromList
+         <$> (sc (char '{') *> sc mkMapList <* sc ( char '}'))
   where
-    mkMapList = (:) <$> sc mkMapItem <*> many (sc (char ',') *> mkMapItem)
+    mkMapList = (:) <$> sc mkMapItem <*> many (sc (char ',') *> sc mkMapItem)
     mkMapItem = (,)
       <$> (T.pack <$> many letterChar)
       <*> (sc (char ':') *> generateTree)

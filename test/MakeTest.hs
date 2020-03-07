@@ -2,8 +2,19 @@
 module MakeTest where
 
 import Test.Tasty.HUnit (assertEqual, Assertion, assertBool)
-import Data.MakeObj(randomCar, toStructure, generateObj, parseGenerateTree, jsonTreeEquality, pp, pprint)
+import Data.MakeObj(randomCar, toStructure, generateObj, parseGenerateTree, parseDefs, jsonTreeEquality, pp, pprint, Defs(..))
 import Test.QuickCheck
+
+
+prop_circle :: Defs -> Property
+prop_circle defs
+  = let ppdefs = pp defs
+        parsed = parseDefs (pp defs)
+    in counterexample
+       ( "START Defs: \n" ++ ppdefs
+         ++ "\nEND Defs\nSTART Parsed: " ++ either show pp parsed
+         ++ "\nEND Parsed")
+       $ parsed === Right defs
 
 unit_trivial :: Assertion
 unit_trivial = assertEqual "Sanity check" 1 1
@@ -16,7 +27,7 @@ isRight = \case
 treeDef :: String
 treeDef = "{color: /black/,"
           ++ "marketId: /[a-z]{2}/,"
-          ++ "year: /202[0-5]/,"
+          ++ "year: 2015 to 2025, "
           ++ "model: /PS[12]/, "
           ++ "package: /performance/, "
           ++ "localIdentifier: /[A-Z]{3} [1-9][0-9]{2}/ ,"
