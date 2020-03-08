@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving #-}
 module Data.MakeObj.AST where
 
 import Data.HashMap.Strict (HashMap)
@@ -47,6 +47,7 @@ instance Arbitrary (Range Int) where
   arbitrary = do
     smaller <- arbitrary
     Range smaller . (smaller +) . abs <$> arbitrary
+
 instance Show t => Show (Range t)
 instance Eq t => Eq (Range t)
 
@@ -76,7 +77,7 @@ instance Arbitrary Text where
   arbitrary = T.pack <$> arbitrary
 
 newtype Defs = Defs { unDefs :: [(TypeLabel, GenerateTree)] }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Semigroup, Monoid)
 
 instance PP Defs where
   pp = concatMap (\(tl, gt) -> pp tl ++ " = " ++ pp gt ++ "\n") . unDefs
