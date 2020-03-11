@@ -16,11 +16,10 @@ type Parser = Parsec Void String
 type Error = ParseErrorBundle String Void
 
 sc :: Parser t -> Parser t
-sc p = spacer *> p <* spacer
-  where spacer = L.space
-          space1
-          (L.skipLineComment "--")
-          (L.skipBlockComment "/*" "*/")
+sc p = spaceParser *> p <* spaceParser
+
+spaceParser :: Parser ()
+spaceParser = L.space space1 (L.skipLineComment "--") (L.skipBlockComment "/*" "*/")
 
 parseGenerateTree :: String -> Either Error GenerateTree
 parseGenerateTree = parse generateTree ""
@@ -54,8 +53,9 @@ rxChar = label "Char" $ choice $ letterChar
 -- | Parses a range (an inclusive Int to Int generator)
 range :: Parser (Range Int)
 range = label "Int Range" $ Range
-  <$> sc L.decimal <* sc (chars "to")
-  <*> sc L.decimal
+  <$> num <* sc (chars "to")
+  <*> num
+  where num = L.signed spaceParser L.decimal
 
 rx :: Parser Regex
 rx = label "Regex Parser" $ try $ do

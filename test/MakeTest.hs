@@ -51,10 +51,5 @@ unit_canCreateCar = do
 
     generate $ generateObj [] tree
 
-  print "############################"
-  pprint $ toStructure c1
-  print "############################"
-  pprint $ toStructure c2
-  print "############################"
   assertBool "structural equality" $ jsonTreeEquality c1 c2
 
