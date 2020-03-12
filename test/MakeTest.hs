@@ -2,7 +2,8 @@
 module MakeTest where
 
 import Test.Tasty.HUnit (assertEqual, Assertion, assertBool)
-import Data.MakeObj(randomCar, toStructure, generateObj, parseGenerateTree, parseDefs, jsonTreeEquality, pp, pprint, Defs(..))
+import Data.MakeObj( toStructure, generateObj, parseGenerateTree
+                   , parseDefs, jsonTreeEquality, pp, pprint, Defs(..))
 import Test.QuickCheck
 
 
@@ -16,13 +17,8 @@ prop_circle defs
          ++ "\nEND Parsed")
        $ parsed === Right defs
 
-unit_trivial :: Assertion
-unit_trivial = assertEqual "Sanity check" 1 1
-
 isRight :: Either a b -> Bool
-isRight = \case
-  Right _ -> True
-  _ -> False
+isRight = \case Right _ -> True; _ -> False
 
 treeDef :: String
 treeDef = "{color: /black/,"
@@ -38,18 +34,3 @@ treeDef = "{color: /black/,"
 unit_canParseTree :: Assertion
 unit_canParseTree = assertBool "can parse tree"
   $ isRight (parseGenerateTree treeDef)
-
-
-unit_canCreateCar :: Assertion
-unit_canCreateCar = do
-  c1 <- randomCar
-  c2 <- do
-
-    tree <- case parseGenerateTree treeDef of
-      Left e -> error $ "bad tree: ("++ show e ++ ")\n" ++ pp treeDef
-      Right t -> return t
-
-    generate $ generateObj [] tree
-
-  assertBool "structural equality" $ jsonTreeEquality c1 c2
-

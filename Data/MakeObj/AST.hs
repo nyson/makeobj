@@ -1,19 +1,22 @@
 {-# LANGUAGE LambdaCase, GADTs, FlexibleInstances, TupleSections #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeApplications #-}
+{-# LANGUAGE StandaloneDeriving #-}
+
 module Data.MakeObj.AST where
 
-import Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HashMap
-import Data.MakeObj.PP
-import Data.Text (Text)
-import qualified Data.Text as T
-import Text.Reggie (Regex, genRegex, GenRegexOpts(..))
-import qualified Text.Reggie as Reggie
-import Data.List (intercalate)
-import Test.QuickCheck
 import Data.Char (toUpper)
-import qualified Data.Set as Set
+import Data.HashMap.Strict (HashMap)
+import Data.List (intercalate)
+import Data.MakeObj.PP (PP(..))
 import Data.Set (Set)
+import Data.Text (Text)
+import Test.QuickCheck (Arbitrary(..), Gen, listOf1, scale, elements, frequency)
+import Text.Reggie (Regex, genRegex, GenRegexOpts(..))
+
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.Set as Set
+import qualified Data.Text as T
+import qualified Text.Reggie as Reggie
 
 
 simpleString :: Gen String
@@ -42,18 +45,15 @@ instance PP TypeLabel where
   pp (TypeLabel s) = T.unpack s
 
 data Range t where
-  Range :: Num t => t -> t -> Range t
+  Range :: (Show t, Eq t, Num t) => t -> t -> Range t
+
+deriving instance Show t => Show (Range t)
+deriving instance Eq t => Eq (Range t)
 
 instance Arbitrary (Range Int) where
   arbitrary = do
     smaller <- arbitrary
     Range smaller . (smaller +) . abs <$> arbitrary
-
-instance Show t => Show (Range t) where
-  show (Range a b) = concat ["Range " ++ show a ++ show b]
-
-instance Eq t => Eq (Range t) where
-  (Range a b) == (Range a' b') = a == a' && b == b'
 
 data GenerateTree
   = GRx Regex
@@ -64,27 +64,20 @@ data GenerateTree
   deriving (Show, Eq)
 
 instance Arbitrary GenerateTree where
-  arbitrary = frequency
-    [ (10, GRx <$> genRegex GROpts {grAllowEmpty= False})
-    , (5,  GRange <$> arbitrary)
-    , (2, GList <$> arbitrary)
-    , (1, GObj . HashMap.fromList
-          <$> scale (`div` 2) (listOf1 objectProducer))
-    ]
-    where objectProducer :: Arbitrary a => Gen (Text, a)
-          objectProducer = (,) <$> simpleText <*> arbitrary
+  arbitrary = (Set.fromList <$> listOf1 arbitrary) >>= genTree
 
 genTree :: Set TypeLabel -> Gen GenerateTree
 genTree defs = frequency
     [ (10, GRx <$> genRegex GROpts {grAllowEmpty= False})
     , (5,  GRange <$> arbitrary)
-    , (20, GType <$> elements defList)
+    , (10, GType <$> elements defList)
     , (2, GList <$> genTree defs)
-    , (1, GObj . HashMap.fromList
-          <$> scale (`div` 2) (listOf1 (objectProducer defs)))
+    , (2, GObj . HashMap.fromList
+          <$> listOf1 objectProducer)
     ]
-    where objectProducer :: Set TypeLabel -> Gen (Text, GenerateTree)
-          objectProducer defs = (,) <$> simpleText <*> genTree defs
+    where objectProducer = (,)
+            <$> simpleText
+            <*> scale (`div` 2) (genTree defs)
           defList = Set.toList defs
 
 instance Arbitrary Text where

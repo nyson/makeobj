@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase, RankNTypes, TypeApplications #-}
 module Data.MakeObj.TreeEquality where
- 
-import Data.Aeson
+
+import Data.Aeson (ToJSON, FromJSON(parseJSON), Value(..), decode, encode)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, unpack)
 import qualified Data.HashMap.Strict as Map
@@ -25,7 +25,7 @@ instance PP JSONTree where
     TNode t -> pp t
     TList xs ->
       let iLvl = i+1
-          elems = concat $ map ((++ ", \n") . ppt iLvl) xs
+          elems = concatMap ((++ ", \n") . ppt iLvl) xs
       in " [\n" ++ elems ++ replicate (i * 2) ' ' ++ "] "
     TObject hm ->
       let il = i+1
