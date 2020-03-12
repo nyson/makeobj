@@ -49,6 +49,8 @@ rxChar :: Parser Char
 rxChar = label "Char" $ choice $ letterChar
          : map char "+, ?*{}[]|()-1234567890-^"
 
+rangedList :: 
+
 -- | Parses a range (an inclusive Int to Int generator)
 range :: Parser (Range Int)
 range = label "Int Range" $ Range

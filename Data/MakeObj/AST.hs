@@ -59,8 +59,14 @@ data GenerateTree
   = GRx Regex
   | GRange (Range Int)
   | GType TypeLabel
-  | GList GenerateTree
+  | GList GenerateList
   | GObj (HashMap Text GenerateTree)
+  deriving (Show, Eq)
+
+data GenerateList
+  = Unbounded GenerateTree
+  | ListOf Int GenerateTree
+  | RangedList Int Int GenerateTree
   deriving (Show, Eq)
 
 instance Arbitrary GenerateTree where
@@ -71,14 +77,22 @@ genTree defs = frequency
     [ (10, GRx <$> genRegex GROpts {grAllowEmpty= False})
     , (5,  GRange <$> arbitrary)
     , (10, GType <$> elements defList)
-    , (2, GList <$> genTree defs)
+    , (2, GList <$> genList defs)
     , (2, GObj . HashMap.fromList
-          <$> listOf1 objectProducer)
+          <$> scale (`div` 2) (listOf1 (objectProducer defs)))
     ]
     where objectProducer = (,)
             <$> simpleText
             <*> scale (`div` 2) (genTree defs)
           defList = Set.toList defs
+
+genList :: Set TypeLabel -> Gen GenerateList
+genList defs = oneof
+  [ Unbounded <$> genTree defs
+  , ListOf <$> fmap abs arbitrary <*> genTree defs
+  , do Range min max <- arbitrary @(Range Int)
+       RangedList min max <$> genTree defs
+  ]
 
 instance Arbitrary Text where
   arbitrary = T.pack <$> arbitrary
@@ -101,12 +115,7 @@ instance PP GenerateTree where
           pretty _ (GRx rx) = "/" ++ Reggie.pp rx ++ "/"
           pretty _ (GType tl) = pp tl
           pretty _ (GRange (Range a b)) = pp a ++ " to " ++ pp b
-          pretty _ (GList (GType ls)) = concat ["[ ", pp ls, " ]"]
-          pretty i (GList inner@(GList _)) = concat
-            [ "\n", tabs i, "["
-            , pretty (i+1) inner
-            , "\n", tabs i, "]"]
-          pretty i (GList ls) = concat ["[ ", pretty (i+1) ls ," ]"]
+          pretty i (GList ls) = concat ["[ ", prettyList (i+1) ls ," ]"]
           pretty i (GObj mp)= concat
             [ "{\n"
             , intercalate ",\n" $ map
@@ -120,5 +129,12 @@ instance PP GenerateTree where
             , tabs i
             , "}"
             ]
+
+          prettyList :: Int -> GenerateList -> String
+          prettyList i = (\s -> '[':s ++ "]") . \case
+            Unbounded tree -> pretty i tree
+            ListOf len tree ->  show len ++ " of " ++ pretty i tree
+            RangedList min max tree -> show min ++ " to " ++ show max
+                                       ++ " of " ++ pretty i tree
           tabs :: Int -> String
           tabs n = replicate (n*4) ' '
