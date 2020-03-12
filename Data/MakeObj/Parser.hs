@@ -42,9 +42,8 @@ generateTree = label "GenerateTree" $
          , GType <$> typeLabel
          ]
 
-chars :: [Char] -> Parser ()
-chars [] = mempty
-chars (c:cs) = char c >> chars cs
+chars :: String -> Parser ()
+chars = foldr ((>>) . char) mempty
 
 rxChar :: Parser Char
 rxChar = label "Char" $ choice $ letterChar

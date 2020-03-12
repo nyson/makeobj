@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Data.MakeObj.PP where
 
 class PP t where
@@ -11,7 +11,7 @@ class PP t where
 
 instance PP t => PP (Maybe t) where
   pp (Just t) = "Just " ++ pp t
-  pp (Nothing) = "Nothing"
+  pp Nothing = "Nothing"
 
 instance PP Int where
   pp = show

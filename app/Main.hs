@@ -55,9 +55,7 @@ configFile = do
     dir <- (++ "/.makeobj/") <$> getHomeDirectory
     map (dir ++) . filter (hasSuffix ".defs") <$> listDirectory dir
 
-  fmap mconcat . sequence . map parseDefs <$> mapM readFile allDefs
-  -- fp <- (++ "/.makeobj/Car.defs") <$> getHomeDirectory
-  -- parseDefs <$> readFile fp
+  fmap mconcat . mapM parseDefs <$> mapM readFile allDefs
 
 parseCommands :: [String] -> Either String Commands
 parseCommands = pc emptyCommands
@@ -92,10 +90,10 @@ main = do
               | otherwise = BL8.putStrLn . encode
 
   case argument cmd of
-    [] -> randomCar >>= encoder
-    (arg:_) -> case lookup (mkTypeLabel arg) cfg of
-      Just gen -> generate (generateObj cfg gen) >>= encoder
-      Nothing -> putStrLn "Definition not found!"
+    [] -> putStrLn "No argument given! What would you like me to generate?"
+    (arg:_) -> case parseGenerateTree arg of
+      Right tree -> generate (generateObj cfg tree) >>= encoder
+      Left error -> putStrLn $ "Unsupported syntax: \n\t" ++ show error
 
 hasFlag :: Commands -> Flag -> Bool
 hasFlag = flip elem . flags

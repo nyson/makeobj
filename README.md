@@ -2,23 +2,51 @@
 
 This is a small tool to generate JSON objects from definitions.
 
-A definition should be in your `~/.makebobj/`, have `.defs` 
-as a suffix and can look like this:
+## Introduction
+Let us start with what it can do!
 ```
-Name = /(Ha|Si|Poké)mon (Gunnar|Anders|Jesper|Saftar)sson/
-```
-or
-```
-Grade = 1 to 5
+$ makeobj -p "{students: [{grade: 1 to 5, name: /[A-Z][a-z]{3,5}/}]}"
+{
+    "students": [
+        {
+            "name": "Lzcl",
+            "grade": 5
+        },
+        {
+            "name": "Otfm",
+            "grade": 5
+        },
+        {
+            "name": "Ragtoo",
+            "grade": 4
+        },
+        {
+            "name": "Zbyipc",
+            "grade": 4
+        }
+}
 ```
 
-And can be invoked like this
+As you see, we gave a definition and it generated a JSON blob conforming to the generated form. 
+It was neatly formatted because of the `-p` flag!
+
+You can also create premade definitions by making a file in the folder `~/.makeobj/` with the extension 
+`.defs`.
+
+For instance, if we have a file called `~/.makeobj/Friends.defs`
 ```
-nyson@jotaro:~/projects/makeobj$ makeobj Grade
-3
+Friend = /(Ha|Si|Poké)mon (Gunnar|Anders|Jesper|Saftar)sson/
 ```
 
-For example, lets try out with a neat `"/.makeobj/School.defs`
+We can generate an object using the below syntax
+```
+$ makeobj Friend
+"Pokémon Gunnarsson"
+```
+
+This makes it easy for us to create complex structures:
+
+`~/.makeobj/School.defs`
 ```
 Name = /(Ha|Si|Poké)mon (Gunnar|Anders|Jesper|Saftar)sson/
 Grade = 1 to 5
@@ -36,13 +64,49 @@ School = { teacher: Person
          }
 ```
 
-We can generate an object using `makeobj -p Student` (-p is for prettyprinting)
+Let us try it out:
 ```
-nyson@jotaro:~/projects/makeobj$ makeobj -p Student
-{
-    "name": "Pokémon Saftarsson",
-    "grade": 5
-}
+$ makeobj School
+{"teacher":{"name":"Hamon Jespersson"},"class":{"courseName":"Lethargy","students":[{"name":"Pokémon Anderssson","grade":1},{"name":"Pokémon Anderssson","grade":2},{"name":"Hamon Saftarsson","grade":2},{"name":"Simon Gunnarsson","grade":4},{"name":"Simon Saftarsson","grade":3},{"name":"Simon Gunnarsson","grade":5},{"name":"Simon Jespersson","grade":2}]}}
 ```
 
-This section will be expanded in the future, with a better FAQ and some syntax specifications :D
+## Syntax Specification
+### Simple generators
+#### Ranges
+Syntax: `Int to Int`
+
+Example: `1 to 5`
+
+Generates a number from an inclusive range of symbols (currently only integers).
+
+#### Regexes
+Syntax: `/Regular Expression/`
+
+Example `/[a-z]{2}_[A-Z]{2}/`
+
+Generates a string from a regular expression
+
+#### Type labels
+Syntax: `TypeLabel`
+
+Example: `Car`
+
+Generates a symbol from a predefined definition.
+
+### Complex generators
+#### Lists
+Syntax: `[Generator]`
+
+Example: `[/(Harry|Hagrid) from (Hogwarts|a shed)/]`
+
+Generates a list of elements from a generator.
+
+#### Objects
+Syntax: `{}`, `{field: Generator}`, `{fieldA: Generator, fieldB: Generator}`
+
+Example: `{name: /(Harry|Hagrid)/, from: /(Hogwarts|a shed)/}`
+
+Generates an JSON compatible object.
+
+## Contribute
+I'll happily accept any contributions to the project, even if it's just a feature request in an issue!
