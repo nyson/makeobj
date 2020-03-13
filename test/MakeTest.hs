@@ -3,7 +3,8 @@ module MakeTest where
 
 import Test.Tasty.HUnit (assertEqual, Assertion, assertBool)
 import Data.MakeObj( toStructure, generateObj, parseGenerateTree
-                   , parseDefs, jsonTreeEquality, pp, pprint, Defs(..))
+                   , parseDefs, jsonTreeEquality, pp, pprint, Defs(..)
+                   , GenerateList(..), generateList)
 import Test.QuickCheck
 
 
@@ -16,6 +17,19 @@ prop_circle defs
          ++ "\nEND Defs\nSTART Parsed: " ++ either show pp parsed
          ++ "\nEND Parsed")
        $ parsed === Right defs
+
+prop_listLength :: GenerateList -> Defs -> Property
+prop_listLength gl (Defs defs) = case gl of
+  Unbounded _ -> label "List with any length"
+    $ forAll mkList $ \l -> length l >= 0
+  ListOf n _ -> label "List with exact length"
+    $ forAll mkList $ \l -> length l === n
+  RangedList min max _ -> label "List with ranged length"
+    $ forAll mkList
+    $ \l -> let len = length l
+            in len >= 0 && min <= len && len <= max
+  where mkList = generateList defs gl
+
 
 isRight :: Either a b -> Bool
 isRight = \case Right _ -> True; _ -> False
@@ -31,6 +45,11 @@ treeDef = "{color: /black/,"
           ++ "vin: /[a-z12345]{5}-[a-z12345]{5}-[a-z12345]{5}-[a-z12345]{5}/"
           ++ "}"
 
+assertRight :: String -> Either a b -> Assertion
+assertRight lbl = assertBool lbl . \case
+  Right _ -> True
+  Left _ -> False
+
 unit_canParseTree :: Assertion
-unit_canParseTree = assertBool "can parse tree"
-  $ isRight (parseGenerateTree treeDef)
+unit_canParseTree = assertRight "can parse tree"
+  $ parseGenerateTree treeDef
