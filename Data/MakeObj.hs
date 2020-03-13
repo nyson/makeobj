@@ -4,14 +4,16 @@
 
 module Data.MakeObj (
   Defs(..), Error(..), TypeLabel(..),
+  GenerateList(..),
   parseGenerateTree, parseDefs,
   pp, pprint, toStructure, jsonTreeEquality,
-  generateObj, mkTypeLabel, genTree
+  generateObj, generateList, mkTypeLabel, genTree
   ) where
 
 import Control.Monad (replicateM)
-import Data.MakeObj.AST (Defs(..), TypeLabel(..), mkTypeLabel, genTree)
-import Data.MakeObj.GenerateObj (generateObj)
+import Data.MakeObj.AST
+  (GenerateList(..), Defs(..), TypeLabel(..), mkTypeLabel, genTree)
+import Data.MakeObj.GenerateObj (generateObj, generateList)
 import Data.MakeObj.PP (pp, pprint)
 import Data.MakeObj.Parser hiding (rx)
 import Data.MakeObj.TreeEquality (jsonTreeEquality, toStructure)

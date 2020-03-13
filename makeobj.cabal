@@ -35,6 +35,7 @@ library
                      , text
                      , time
                      , vector
+                     , non-empty
                      , QuickCheck
   default-language:    Haskell2010
 

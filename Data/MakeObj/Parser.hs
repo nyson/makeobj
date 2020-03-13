@@ -22,7 +22,7 @@ spaceParser :: Parser ()
 spaceParser = L.space space1 (L.skipLineComment "--") (L.skipBlockComment "/*" "*/")
 
 parseGenerateTree :: String -> Either Error GenerateTree
-parseGenerateTree = parse generateTree ""
+parseGenerateTree = parse tree ""
 
 parseDefs :: String -> Either Error Defs
 parseDefs = parse defs ""
@@ -31,12 +31,12 @@ defs :: Parser Defs
 defs = Defs <$> label "Defs Config" (many def)
   where def = (,)
               <$> sc typeLabel <* sc (char '=')
-              <*> sc generateTree
+              <*> sc tree
 
-generateTree :: Parser GenerateTree
-generateTree = label "GenerateTree" $
-  choice [ try $ GObj <$> genObj
-         , try $ GList <$> genList
+tree :: Parser GenerateTree
+tree = label "GenerateTree" $
+  choice [ try $ GObj <$> object
+         , try $ GList <$> list
          , GRange <$> range
          , GRx <$> sc rx
          , GType <$> typeLabel
@@ -54,7 +54,9 @@ range :: Parser (Range Int)
 range = label "Int Range" $ Range
   <$> num <* sc (chars "to")
   <*> num
-  where num = L.signed spaceParser L.decimal
+
+num :: Parser Int
+num = L.signed spaceParser L.decimal
 
 rx :: Parser Regex
 rx = label "Regex Parser" $ try $ do
@@ -66,14 +68,23 @@ rx = label "Regex Parser" $ try $ do
 typeLabel :: Parser TypeLabel
 typeLabel = label "TypeLabel" (TypeLabel . T.pack <$> some letterChar)
 
-genList :: Parser GenerateTree
-genList = label "List" $ char '[' *> sc generateTree <* char ']'
+list :: Parser GenerateList
+list = label "List" $ choice
+          [ try $ Unbounded <$> sc tree'
+          , try $ ListOf <$> (sc num <* _of) <*> tree'
+          , RangedList
+            <$> (sc num <* sc (chars "to"))
+            <*> (sc num <* _of)
+            <*> tree'
+          ]
+          where tree' = char '[' *> sc tree <* char ']'
+                _of = sc (chars "of")
 
-genObj :: Parser (HashMap Text GenerateTree)
-genObj = label "Object" $ HM.fromList
+object :: Parser (HashMap Text GenerateTree)
+object = label "Object" $ HM.fromList
          <$> (sc (char '{') *> sc mkMapList <* sc ( char '}'))
   where
     mkMapList = (:) <$> sc mkMapItem <*> many (sc (char ',') *> sc mkMapItem)
     mkMapItem = (,)
       <$> (T.pack <$> many letterChar)
-      <*> (sc (char ':') *> generateTree)
+      <*> (sc (char ':') *> tree)
