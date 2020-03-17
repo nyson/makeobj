@@ -1,9 +1,6 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes, DeriveGeneric, GeneralizedNewtypeDeriving, LambdaCase #-}
-{-# LANGUAGE FlexibleInstances, GADTs #-}
-
-
 module Data.MakeObj (
   Defs(..), Error(..), TypeLabel(..),
+  GenerateTree(..),
   GenerateList(..),
   parseGenerateTree, parseDefs,
   pp, pprint, toStructure, jsonTreeEquality,
@@ -11,8 +8,13 @@ module Data.MakeObj (
   ) where
 
 import Control.Monad (replicateM)
-import Data.MakeObj.AST
-  (GenerateList(..), Defs(..), TypeLabel(..), mkTypeLabel, genTree)
+import Data.MakeObj.AST (
+  GenerateTree(..),
+  GenerateList(..),
+  Defs(..),
+  TypeLabel(..),
+  mkTypeLabel,
+  genTree)
 import Data.MakeObj.GenerateObj (generateObj, generateList)
 import Data.MakeObj.PP (pp, pprint)
 import Data.MakeObj.Parser hiding (rx)

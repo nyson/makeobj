@@ -1,99 +1,47 @@
-{-# LANGUAGE OverloadedStrings, LambdaCase, NamedFieldPuns #-}
-
-
+{-# LANGUAGE LambdaCase, NamedFieldPuns #-}
 module Main where
 
-import System.Environment (getArgs)
-import System.Directory (getHomeDirectory, listDirectory)
-import Data.Aeson (encode, ToJSON)
-import Data.Aeson.Encode.Pretty (encodePretty)
+import Data.List (isSuffixOf)
+import System.Directory (getHomeDirectory, listDirectory, doesFileExist)
+
 import Test.QuickCheck (generate)
-import Control.Monad (when)
-import qualified Data.ByteString.Lazy.Char8 as BL8
-import Data.MakeObj
-import qualified Data.Set as Set
-import qualified Text.Read as Read
+import Control.Monad (foldM, when, unless, filterM, forM)
+import Data.MakeObj (Defs (..), Error, parseDefs, GenerateTree, parseGenerateTree, pp, generateObj, TypeLabel(..))
+import Options (Options(..), loadOptions)
+import qualified Data.Text as T
 
-safeHead :: [a] -> Maybe a
-safeHead [] = Nothing
-safeHead (x:_) = Just x
+baseDir :: IO FilePath
+baseDir = (++ "/.makeobj/") <$> getHomeDirectory
 
-data Commands = Commands
-  { flags :: Set.Set Flag
-  , argument :: [String]
-  } deriving Show
+loadDefFile :: String -> IO (Either Error Defs)
+loadDefFile defScope = do
+  absFilePath <- (++ defScope ++ ".defs") <$> baseDir
+  doesFileExist absFilePath >>= flip unless
+    (error $ "File not found: '"++ absFilePath ++ "'")
+  parseDefs <$> readFile absFilePath
 
-emptyCommands :: Commands
-emptyCommands = Commands Set.empty []
-
-data Flag = PrettyPrint | Verbose
-  deriving (Ord, Eq, Show)
-
-set :: Commands -> String -> Either String Commands
-set c@Commands{flags} flag
-  = case strToFlag flag of
-      Just flag -> return c{flags = Set.insert flag flags }
-      Nothing -> Left $ "Flag not recognized: '"++ flag ++"'"
-
-strToFlag = \case
-  "p" -> Just PrettyPrint
-  "pp" -> Just PrettyPrint
-  "verbose" -> Just Verbose
-  "v" -> Just Verbose
-  _ -> Nothing
-
-hasSuffix :: String -> String -> Bool
-hasSuffix "" "" = True
-hasSuffix _  "" = False
-hasSuffix suffix@(c2:_) str@(c1:next)
-  | c1 == c2 && str == suffix = True
-  | otherwise = hasSuffix suffix next
-
-configFile :: IO (Either Error Defs)
-configFile = do
-  allDefs <- do
-    dir <- (++ "/.makeobj/") <$> getHomeDirectory
-    map (dir ++) . filter (hasSuffix ".defs") <$> listDirectory dir
-
-  fmap mconcat . mapM parseDefs <$> mapM readFile allDefs
-
-parseCommands :: [String] -> Either String Commands
-parseCommands = pc emptyCommands
-  where
-    pc :: Commands -> [String] -> Either String Commands
-    pc c (('-':'-':flag) : next) = do
-      c' <- set c flag
-      pc c' next
-    pc c (('-':flag:"") : next) = do
-      c' <- set c (flag:"")
-      pc c' next
-    pc c@Commands{argument} (word:next)
-      = pc c{argument= word:argument} next
-    pc c [] = return c
+loadDefDir :: IO (Either Error Defs)
+loadDefDir = do
+  bd <- baseDir
+  files <- map (bd ++) . filter (".defs" `isSuffixOf`) <$> listDirectory bd
+  fmap mconcat . mapM parseDefs <$> mapM readFile files
 
 main :: IO ()
 main = do
-  (Defs cfg ) <- configFile >>= \case
+  Options
+    { verbose, encoder, scope, arg
+    } <- loadOptions
+
+  defs <- maybe loadDefDir loadDefFile scope >>= \case
     Left err -> error (show err)
     Right c -> return c
 
-  cmd <- parseCommands <$> getArgs >>= \case
-    Left err -> error err
-    Right c -> return c
-
-  when (cmd `hasFlag` Verbose) $ do
+  when verbose $ do
     putStrLn "Defs loaded: "
-    mapM_ (putStrLn . (\(d,_) -> "\t" ++ pp d)) cfg
+    mapM_ (putStrLn . (\(d,_) -> "  " ++ pp d)) (unDefs defs)
 
-  let encoder :: ToJSON a => a -> IO ()
-      encoder | cmd `hasFlag` PrettyPrint = BL8.putStrLn . encodePretty
-              | otherwise = BL8.putStrLn . encode
-
-  case argument cmd of
+  case arg of
     [] -> putStrLn "No argument given! What would you like me to generate?"
     (arg:_) -> case parseGenerateTree arg of
-      Right tree -> generate (generateObj cfg tree) >>= encoder
+      Right tree -> generate (generateObj defs tree) >>= encoder
       Left error -> putStrLn $ "Unsupported syntax: \n\t" ++ show error
-
-hasFlag :: Commands -> Flag -> Bool
-hasFlag = flip elem . flags
