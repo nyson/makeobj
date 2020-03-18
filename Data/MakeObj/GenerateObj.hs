@@ -13,21 +13,19 @@ import qualified Data.Text as T
 import qualified Data.Vector as V
 import qualified Text.Reggie as R
 
-generateObj :: [(TypeLabel, GenerateTree)] -> GenerateTree -> Gen Value
+generateObj :: Defs -> GenerateTree -> Gen Value
 generateObj defs = \case
   GRx rx -> String . T.pack <$> R.rxGen rx
-  GType tl -> case Prelude.lookup tl defs of
+  GType tl -> case Prelude.lookup tl (unDefs defs) of
       Nothing -> error $ "Missing typedef: " ++ pp tl
       Just gt -> generateObj defs gt
-  GObj mp -> Object . HM.fromList <$> mapM (f defs) (HM.toList mp)
-    where f :: [(TypeLabel, GenerateTree)]
-            -> (a, GenerateTree)
-            -> Gen (a, Value)
-          f ds (a, t) = (a,) <$> generateObj ds t
+  GObj obj -> Object . HM.fromList <$> mapM f (HM.toList obj)
+    where f (a, t) = (a,) <$> generateObj defs t
+
   GList t -> Array . V.fromList <$> generateList defs t
   GRange (Range a b) -> Number . fromIntegral <$> elements [a .. b]
 
-generateList :: [(TypeLabel, GenerateTree)] -> GenerateList -> Gen [Value]
+generateList :: Defs -> GenerateList -> Gen [Value]
 generateList defs = \case
   Unbounded t -> listOf (generateObj defs t)
   ListOf i t -> replicateM i (generateObj defs t)

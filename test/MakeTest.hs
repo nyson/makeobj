@@ -19,15 +19,17 @@ prop_circle defs
        $ parsed === Right defs
 
 prop_listLength :: GenerateList -> Defs -> Property
-prop_listLength gl (Defs defs) = case gl of
+prop_listLength gl defs = case gl of
   Unbounded _ -> label "List with any length"
-    $ forAll mkList $ \l -> length l >= 0
-  ListOf n _ -> label "List with exact length"
-    $ forAll mkList $ \l -> length l === n
+    $ forAll mkList
+    $ const True
+  ListOf n  _ -> label "List with exact length"
+    $ forAll mkList
+    $ \l -> length l === n
   RangedList min max _ -> label "List with ranged length"
     $ forAll mkList
     $ \l -> let len = length l
-            in len >= 0 && min <= len && len <= max
+            in min <= len && len <= max
   where mkList = generateList defs gl
 
 
@@ -51,5 +53,4 @@ assertRight lbl = assertBool lbl . \case
   Left _ -> False
 
 unit_canParseTree :: Assertion
-unit_canParseTree = assertRight "can parse tree"
-  $ parseGenerateTree treeDef
+unit_canParseTree = assertRight "can parse tree" $ parseGenerateTree treeDef
