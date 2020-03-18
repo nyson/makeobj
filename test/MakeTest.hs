@@ -19,10 +19,13 @@ prop_circle defs
        $ parsed === Right defs
 
 prop_listLength :: GenerateList -> Defs -> Property
-prop_listLength gl (Defs defs) = case gl of
-  Unbounded _ -> label "List with any length" $ const True
+prop_listLength gl defs = case gl of
+  Unbounded _ -> label "List with any length"
+    $ forAll mkList
+    $ const True
   ListOf n  _ -> label "List with exact length"
-    $ forAll mkList $ \l -> length l === n
+    $ forAll mkList
+    $ \l -> length l === n
   RangedList min max _ -> label "List with ranged length"
     $ forAll mkList
     $ \l -> let len = length l
