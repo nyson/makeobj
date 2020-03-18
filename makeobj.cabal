@@ -42,11 +42,11 @@ library
 executable makeobj
   main-is:             Main.hs
   other-modules:       Options
+                     , Definitions
 
   -- other-extensions:
   build-depends:       base >=4.12 && <4.13
                      , makeobj
-                     , scotty
                      , aeson
                      , aeson-pretty
                      , containers

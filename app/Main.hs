@@ -1,30 +1,11 @@
 {-# LANGUAGE LambdaCase, NamedFieldPuns #-}
 module Main where
 
-import Data.List (isSuffixOf)
-import System.Directory (getHomeDirectory, listDirectory, doesFileExist)
-
 import Test.QuickCheck (generate)
-import Control.Monad (foldM, when, unless, filterM, forM)
-import Data.MakeObj (Defs (..), Error, parseDefs, GenerateTree, parseGenerateTree, pp, generateObj, TypeLabel(..))
+import Control.Monad (when)
+import Data.MakeObj (parseGenerateTree, pp, generateObj, unDefs)
 import Options (Options(..), loadOptions)
-import qualified Data.Text as T
-
-baseDir :: IO FilePath
-baseDir = (++ "/.makeobj/") <$> getHomeDirectory
-
-loadDefFile :: String -> IO (Either Error Defs)
-loadDefFile defScope = do
-  absFilePath <- (++ defScope ++ ".defs") <$> baseDir
-  doesFileExist absFilePath >>= flip unless
-    (error $ "File not found: '"++ absFilePath ++ "'")
-  parseDefs <$> readFile absFilePath
-
-loadDefDir :: IO (Either Error Defs)
-loadDefDir = do
-  bd <- baseDir
-  files <- map (bd ++) . filter (".defs" `isSuffixOf`) <$> listDirectory bd
-  fmap mconcat . mapM parseDefs <$> mapM readFile files
+import Definitions (loadDefDir, loadDefFile)
 
 main :: IO ()
 main = do
