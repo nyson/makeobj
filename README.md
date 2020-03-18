@@ -95,9 +95,9 @@ Generates a symbol from a predefined definition.
 
 ### Complex generators
 #### Lists
-Syntax: `[Generator]`, `Int of [Generator]`, `Int to Int of [Generator]`
+Syntax: `[Generator]`, `Int of Generator`, `Int to Int of Generator`
 
-Example: `[/(Harry|Hagrid) from (Hogwarts|a shed)/]`, `5 of [9 to 17]`, `1 to 5 of [/a+/]`
+Example: `[/(Harry|Hagrid) from (Hogwarts|a shed)/]`, `5 of 9 to 17`, `1 to 5 of /a+/`
 
 Generates a list of elements from a generator.
 

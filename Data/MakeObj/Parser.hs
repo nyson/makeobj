@@ -70,14 +70,14 @@ typeLabel = label "TypeLabel" (TypeLabel . T.pack <$> some letterChar)
 
 list :: Parser GenerateList
 list = label "List" $ choice
-          [ try $ Unbounded <$> sc tree'
+          [ try $ Unbounded <$> (char '[' *> sc tree <* char ']')
           , try $ ListOf <$> (sc num <* _of) <*> tree'
           , RangedList
             <$> (sc num <* sc (chars "to"))
             <*> (sc num <* _of)
             <*> tree'
           ]
-          where tree' = char '[' *> sc tree <* char ']'
+          where tree' = sc tree
                 _of = sc (chars "of")
 
 object :: Parser (HashMap Text GenerateTree)
