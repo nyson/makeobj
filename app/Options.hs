@@ -10,7 +10,7 @@ import Data.Aeson (encode, Value)
 import Data.Aeson.Encode.Pretty (encodePretty)
 
 defaultOptions :: Options
-defaultOptions = Options False bl8Encoder Nothing []
+defaultOptions = Options False (BL8.putStrLn . encode) Nothing []
 
 data Options = Options
     { verbose :: Bool
@@ -18,10 +18,6 @@ data Options = Options
     , scope :: Maybe String
     , arg :: [String]
     }
-
-bl8Encoder = BL8.putStrLn . encode
-bl8PrettyEncoder :: Value -> IO ()
-bl8PrettyEncoder = BL8.putStrLn . encodePretty
 
 options :: [OptDescr (Options -> Options)]
 options =
