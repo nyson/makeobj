@@ -126,11 +126,8 @@ instance PP GenerateList where
 prettyList :: Int -> GenerateList -> String
 prettyList i = \case
   Unbounded tree  -> concat ["[", pretty i tree, "]"]
-  ListOf len tree -> concat [show len, " of ", "[", pretty i tree, "]"]
-  RangedList min max tree -> concat
-    [ show min, " to ", show max, " of "
-    , "[", pretty i tree, "]"
-    ]
+  ListOf len tree -> concat [show len, " of ", pretty i tree]
+  RangedList min max tree -> concat [ show min, " to ", show max, " of " , pretty i tree ]
 
 pretty :: Int -> GenerateTree -> String
 pretty _ (GRx rx) = "/" ++ Reggie.pp rx ++ "/"
