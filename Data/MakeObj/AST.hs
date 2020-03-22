@@ -5,8 +5,10 @@
 module Data.MakeObj.AST where
 
 import Data.Char (toUpper)
+import Data.Aeson (Value(..))
 import Data.HashMap.Strict (HashMap)
 import Data.List (intercalate)
+import Data.Scientific (Scientific)
 import Data.MakeObj.PP (PP(..))
 import Data.Set (Set)
 import Data.Text (Text)
@@ -25,12 +27,11 @@ simpleString = listOf1 (elements ['a'..'z'])
 simpleText :: Gen Text
 simpleText = T.pack <$> simpleString
 
+tMapHead :: (Char -> Char) -> Text -> Text
+tMapHead f = maybe T.empty (\(c, rest) -> f c `T.cons` rest) . T.uncons
+
 upperCase :: Gen Text
-upperCase = transform . T.uncons <$> simpleText
-  where transform :: Maybe (Char, Text) -> Text
-        transform = \case
-          Just (c, rest) -> toUpper c `T.cons` rest
-          Nothing -> T.empty
+upperCase =  tMapHead toUpper <$> simpleText
 
 newtype TypeLabel = TypeLabel Text
   deriving (Show, Eq, Ord)
@@ -58,16 +59,33 @@ instance Arbitrary (Range Int) where
 data GenerateTree
   = GRx Regex
   | GRange (Range Int)
+  | GLiteral Value
   | GType TypeLabel
   | GList GenerateList
   | GObj (HashMap Text GenerateTree)
   deriving (Show, Eq)
 
+-- data Literal
+--   = GBool Bool
+--   | GNumber Scientific
+--   | GString String
+--   | GArray [Literal]
+--   | Null
+
 data GenerateList
   = Unbounded GenerateTree
   | ListOf Int GenerateTree
   | RangedList Int Int GenerateTree
+  | LiteralList [GenerateTree]
   deriving (Show, Eq)
+
+instance Arbitrary Value where
+  arbitrary = frequency 
+    [(1, return $ Bool True)]
+
+instance PP Value where
+  pp (Bool b) | b = "true"
+              | otherwise = "false"
 
 instance Arbitrary GenerateTree where
   arbitrary = (Set.fromList <$> listOf1 arbitrary) >>= genTree
@@ -80,6 +98,7 @@ genTree defs = frequency $ if defs == Set.empty
           otherGens =
             [ (10, GRx <$> genRegex GROpts {grAllowEmpty= False})
             , (5,  GRange <$> arbitrary)
+            , (2, GLiteral <$> arbitrary)
             , (2, GList <$> genList defs)
             , (2, GObj . HashMap.fromList
                 <$> scale (`div` 2) (listOf1 objectProducer))
@@ -94,7 +113,7 @@ instance Arbitrary GenerateList where
 
 genList :: Set TypeLabel -> Gen GenerateList
 genList defs | defs == Set.empty = error "Empty definition set given!"
-genList defs = scale (`div` 50) $ oneof
+genList defs = scale (`div` 2) $ oneof
   [ Unbounded <$> genTree defs
   , ListOf
     <$> fmap abs arbitrary
@@ -103,6 +122,7 @@ genList defs = scale (`div` 50) $ oneof
       min <- fmap abs arbitrary
       max <- (min +) <$> fmap abs arbitrary
       RangedList min max <$> genTree defs
+  , LiteralList <$> arbitrary
   ]
 
 instance Arbitrary Text where
@@ -125,12 +145,16 @@ instance PP GenerateList where
 
 prettyList :: Int -> GenerateList -> String
 prettyList i = \case
-  Unbounded tree  -> concat ["[", pretty i tree, "]"]
+  Unbounded tree  -> concat ["list of ", pretty i tree]
   ListOf len tree -> concat [show len, " of ", pretty i tree]
   RangedList min max tree -> concat [ show min, " to ", show max, " of " , pretty i tree ]
+  LiteralList ls 
+    | length ls <= 1 -> concat ["[ ", concatMap (pretty (i+1)) ls, " ]"]
+    | otherwise -> concat ["[ ", intercalate "," $ map (( ("\n" ++ tabs i) ++) . pretty (i+1)) ls, "\n", tabs i, "]"]
 
 pretty :: Int -> GenerateTree -> String
 pretty _ (GRx rx) = "/" ++ Reggie.pp rx ++ "/"
+pretty _ (GLiteral v) = pp v
 pretty _ (GType tl) = pp tl
 pretty _ (GRange (Range a b)) = pp a ++ " to " ++ pp b
 pretty i (GList ls) = prettyList (i+1) ls

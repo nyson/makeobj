@@ -57,9 +57,9 @@ Student = { name: Name
           }
 
 School = { teacher: Person
-         , class: { 
-             courseName: /(Philosoph|Letharg)y/,
-             students: [Student]
+         , class: 
+           { courseName: /(Philosoph|Letharg)y/
+           , students: list of Student
            }
          }
 ```
@@ -84,7 +84,7 @@ Syntax: `/Regular Expression/`
 
 Example `/[a-z]{2}_[A-Z]{2}/`
 
-Generates a string from a regular expression
+Generates a string from a regular expression.
 
 #### Type labels
 Syntax: `TypeLabel`
@@ -93,9 +93,23 @@ Example: `Car`
 
 Generates a symbol from a predefined definition.
 
+#### Literals
+Syntax: `Literal`
+
+Example: `true`, `null`, `10.22`, `"Hagrid"`
+
+Constructs a literal in the current generator.
+
+### Lists
+Syntax: `[Generator1, Generator2, ...]`
+
+Example: `[Car, Car, "Hagrid", Car]`
+
+Constructs a list with the given generators.
+
 ### Complex generators
 #### Lists
-Syntax: `[Generator]`, `Int of Generator`, `Int to Int of Generator`
+Syntax: `list of Generator`, `Int of Generator`, `Int to Int of Generator`
 
 Example: `[/(Harry|Hagrid) from (Hogwarts|a shed)/]`, `5 of 9 to 17`, `1 to 5 of /a+/`
 

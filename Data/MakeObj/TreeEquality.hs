@@ -15,12 +15,12 @@ data ValType = TString | TNumber | TBool | TNull
 
 instance PP ValType where pp = show
 
-data JSONTree = TNode ValType
-              | TList [JSONTree]
-              | TObject (HashMap Text JSONTree)
+data JSONStructure = TNode ValType
+              | TList [JSONStructure]
+              | TObject (HashMap Text JSONStructure)
   deriving (Eq, Show)
 
-instance PP JSONTree where
+instance PP JSONStructure where
   ppt i = \case
     TNode t -> pp t
     TList xs ->
@@ -35,7 +35,7 @@ instance PP JSONTree where
           elems = concatMap snd . Map.toList $ Map.mapWithKey ppKV hm
       in "{\n" ++ elems ++ replicate (i * 2) ' ' ++ "} "
 
-instance FromJSON JSONTree where
+instance FromJSON JSONStructure where
   parseJSON = \case
     String _ -> return $ TNode TString
     Number _ -> return $ TNode TNumber
@@ -44,13 +44,13 @@ instance FromJSON JSONTree where
     Array arr -> TList <$> mapM parseJSON (V.toList arr)
     Object o -> TObject <$> sequence (Map.map parseJSON o)
 
-toStructure :: ToJSON a => a -> Maybe JSONTree
-toStructure = decode . encode
+jsonStructure :: ToJSON a => a -> Maybe JSONStructure
+jsonStructure = decode . encode
 
-jsonTreeEquality :: (ToJSON a, ToJSON b) => a -> b -> Bool
-jsonTreeEquality a b = fromMaybe False $ do
-  let ecdc :: forall t. ToJSON t => t -> Maybe JSONTree
-      ecdc = decode @JSONTree . encode
+jsonStructureEquality :: (ToJSON a, ToJSON b) => a -> b -> Bool
+jsonStructureEquality a b = fromMaybe False $ do
+  let ecdc :: forall t. ToJSON t => t -> Maybe JSONStructure
+      ecdc = decode @JSONStructure . encode
   a' <- ecdc a
   b' <- ecdc b
   return $ a' == b'
