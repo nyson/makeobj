@@ -1,15 +1,20 @@
+{-# LANGUAGE TypeApplications #-}
 module Data.MakeObj.Parser where
 
 import Data.Void (Void)
 import Data.Text (Text)
 import Data.HashMap.Strict (HashMap)
 import Text.Reggie (Regex)
-import qualified Text.Reggie as Rx
+import Data.Functor (($>))
+import Data.Scientific (Scientific, scientific)
+import Data.Aeson (Value(..))
+import qualified Text.Reggie as Rx hiding (Null)
 import qualified Data.HashMap.Strict as HM
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import qualified Data.Text as T
+import qualified Data.Vector as V
 import Data.MakeObj.AST
 
 type Parser = Parsec Void String
@@ -37,10 +42,35 @@ tree :: Parser GenerateTree
 tree = label "GenerateTree" $
   choice [ try $ GObj <$> object
          , try $ GList <$> list
-         , GRange <$> range
+         , try $ GRange <$> range
          , GRx <$> sc rx
          , GType <$> typeLabel
+         , GLiteral <$> value
          ]
+
+interleavedParser :: Parser b -> Parser a -> Parser [a]
+interleavedParser interleaver parser = choice 
+  [ (:) <$> sc parser <*> many (sc interleaver *> sc parser)
+  , return []
+  ]
+
+spaceWrapped :: (Char, Char) -> Parser b -> Parser b
+spaceWrapped (c1, c2) parser = schar c1 *> parser <* schar c2
+    where schar = sc . char
+
+value :: Parser Value
+value = label "Value Parser"
+  $ choice [ try $ Number <$> L.signed spaceParser L.scientific
+               , Bool <$> sc bool
+               , Null <$ sc (chars "null")
+               , String <$> sc limitedString
+               ]
+  where bool = choice
+              [ chars "true" $> True 
+              , chars "false" $> False
+              ]
+        limitedString = T.pack <$> 
+          sc (char '"' *> many letterChar <* char '"')
 
 chars :: String -> Parser ()
 chars = foldr ((>>) . char) mempty
@@ -55,7 +85,7 @@ range = label "Int Range" $ Range
   <$> num <* sc (chars "to")
   <*> num
 
-num :: Parser Int
+num :: (Integral n, Num n) => Parser n
 num = L.signed spaceParser L.decimal
 
 rx :: Parser Regex
@@ -66,16 +96,20 @@ rx = label "Regex Parser" $ try $ do
     Right rx -> return rx
 
 typeLabel :: Parser TypeLabel
-typeLabel = label "TypeLabel" (TypeLabel . T.pack <$> some letterChar)
+typeLabel = label "TypeLabel" $ TypeLabel . T.pack <$> capitalizedString
+  where capitalizedString = (:) <$> upperChar <*> many letterChar
 
 list :: Parser GenerateList
 list = label "List" $ choice
-          [ try $ Unbounded <$> (char '[' *> sc tree <* char ']')
+          [ try $ Unbounded 
+            <$> (sc (chars "list") *> _of *> sc tree)
           , try $ ListOf <$> (sc num <* _of) <*> tree'
           , RangedList
             <$> (sc num <* sc (chars "to"))
             <*> (sc num <* _of)
             <*> tree'
+          , LiteralList <$> spaceWrapped ('[', ']') (interleavedParser (char ',') tree)
+          
           ]
           where tree' = sc tree
                 _of = sc (chars "of")

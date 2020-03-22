@@ -27,6 +27,7 @@ generateObj defs = \case
 
 generateList :: Defs -> GenerateList -> Gen [Value]
 generateList defs = \case
+  LiteralList ls -> mapM (generateObj defs) ls
   Unbounded t -> listOf (generateObj defs t)
   ListOf i t -> replicateM i (generateObj defs t)
   RangedList min max t -> do

@@ -3,7 +3,7 @@ module Data.MakeObj (
   GenerateTree(..),
   GenerateList(..),
   parseGenerateTree, parseDefs,
-  pp, pprint, toStructure, jsonTreeEquality,
+  pp, pprint, jsonStructure, jsonStructureEquality,
   generateObj, generateList, mkTypeLabel, genTree
   ) where
 
@@ -18,7 +18,7 @@ import Data.MakeObj.AST (
 import Data.MakeObj.GenerateObj (generateObj, generateList)
 import Data.MakeObj.PP (pp, pprint)
 import Data.MakeObj.Parser hiding (rx)
-import Data.MakeObj.TreeEquality (jsonTreeEquality, toStructure)
+import Data.MakeObj.TreeEquality (jsonStructure, jsonStructureEquality)
 import Data.Map (Map)
 import Data.Text (Text)
 import Data.Time.Clock
