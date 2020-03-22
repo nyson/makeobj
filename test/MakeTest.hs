@@ -2,8 +2,8 @@
 module MakeTest where
 
 import Test.Tasty.HUnit (assertEqual, Assertion, assertBool)
-import Data.MakeObj( toStructure, generateObj, parseGenerateTree
-                   , parseDefs, jsonTreeEquality, pp, pprint, Defs(..)
+import Data.MakeObj( jsonStructure, generateObj, parseGenerateTree
+                   , parseDefs, jsonStructureEquality, pp, pprint, Defs(..)
                    , GenerateList(..), generateList)
 import Test.QuickCheck
 
