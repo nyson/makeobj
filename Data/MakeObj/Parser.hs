@@ -47,7 +47,7 @@ chars = foldr ((>>) . char) mempty
 
 rxChar :: Parser Char
 rxChar = label "Char" $ choice $ letterChar
-         : map char "+, ?*{}[]|()-1234567890-^"
+         : map char "+, ?:.*{}[]|()-1234567890-^"
 
 -- | Parses a range (an inclusive Int to Int generator)
 range :: Parser (Range Int)
