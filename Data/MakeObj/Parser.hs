@@ -1,8 +1,8 @@
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeApplications, LambdaCase #-}
 module Data.MakeObj.Parser where
 
-import Data.Void (Void)
 import Data.Text (Text)
+import Control.Monad (replicateM)
 import Data.HashMap.Strict (HashMap)
 import Text.Reggie (Regex)
 import Data.Functor (($>))
@@ -10,21 +10,16 @@ import Data.Scientific (Scientific, scientific)
 import Data.Aeson (Value(..))
 import qualified Text.Reggie as Rx hiding (Null)
 import qualified Data.HashMap.Strict as HM
-import Text.Megaparsec
-import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import qualified Data.Text as T
 import qualified Data.Vector as V
+
+import Data.MakeObj.AST.Time (TimeLiteral)
+import Data.MakeObj.Parser.Time (timeLiteral)
+
 import Data.MakeObj.AST
-
-type Parser = Parsec Void String
-type Error = ParseErrorBundle String Void
-
-sc :: Parser t -> Parser t
-sc p = spaceParser *> p <* spaceParser
-
-spaceParser :: Parser ()
-spaceParser = L.space space1 (L.skipLineComment "--") (L.skipBlockComment "/*" "*/")
+import Data.MakeObj.Parser.Time 
+import Data.MakeObj.Parser.Shared
 
 parseGenerateTree :: String -> Either Error GenerateTree
 parseGenerateTree = parse tree ""
@@ -43,8 +38,9 @@ tree = label "GenerateTree" $
   choice [ try $ GObj <$> object
          , try $ GList <$> list
          , try $ GRange <$> range
+         , try $ GTime <$> timeLiteral
          , GRx <$> sc rx
-         , GType <$> typeLabel
+         , GType <$> typeLabel         
          , GLiteral <$> value
          ]
 
@@ -53,10 +49,6 @@ interleavedParser interleaver parser = choice
   [ (:) <$> sc parser <*> many (sc interleaver *> sc parser)
   , return []
   ]
-
-spaceWrapped :: (Char, Char) -> Parser b -> Parser b
-spaceWrapped (c1, c2) parser = schar c1 *> parser <* schar c2
-    where schar = sc . char
 
 value :: Parser Value
 value = label "Value Parser"
@@ -72,11 +64,8 @@ value = label "Value Parser"
         limitedString = T.pack <$> 
           sc (char '"' *> many letterChar <* char '"')
 
-chars :: String -> Parser ()
-chars = foldr ((>>) . char) mempty
-
 rxChar :: Parser Char
-rxChar = label "Char" $ choice $ letterChar
+rxChar = label "Char" . choice $ letterChar
          : map char "+, ?:.*{}[]|()-1234567890-^"
 
 -- | Parses a range (an inclusive Int to Int generator)
@@ -84,9 +73,6 @@ range :: Parser (Range Int)
 range = label "Int Range" $ Range
   <$> num <* sc (chars "to")
   <*> num
-
-num :: (Integral n, Num n) => Parser n
-num = L.signed spaceParser L.decimal
 
 rx :: Parser Regex
 rx = label "Regex Parser" $ try $ do
@@ -109,16 +95,17 @@ list = label "List" $ choice
             <*> (sc num <* _of)
             <*> tree'
           , LiteralList <$> spaceWrapped ('[', ']') (interleavedParser (char ',') tree)
-          
           ]
           where tree' = sc tree
                 _of = sc (chars "of")
 
 object :: Parser (HashMap Text GenerateTree)
 object = label "Object" $ HM.fromList
-         <$> (sc (char '{') *> sc mkMapList <* sc ( char '}'))
+         <$> spaceWrapped ('{', '}') (sc mkMapList)
   where
-    mkMapList = (:) <$> sc mkMapItem <*> many (sc (char ',') *> sc mkMapItem)
+    mkMapList = (:) 
+      <$> sc mkMapItem
+      <*> many (sc (char ',') *> sc mkMapItem)
     mkMapItem = (,)
       <$> (T.pack <$> many letterChar)
       <*> (sc (char ':') *> tree)

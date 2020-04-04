@@ -12,8 +12,12 @@ import Data.Scientific (Scientific)
 import Data.MakeObj.PP (PP(..))
 import Data.Set (Set)
 import Data.Text (Text)
-import Test.QuickCheck (Arbitrary(..), Gen, listOf1, scale, elements, frequency, oneof)
+import Test.QuickCheck 
+  ( Arbitrary(..), Gen, listOf1, scale
+  , elements, frequency, oneof, choose)
 import Text.Reggie (Regex, genRegex, GenRegexOpts(..))
+
+import Data.MakeObj.AST.Time (TimeLiteral)
 
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Set as Set
@@ -62,15 +66,9 @@ data GenerateTree
   | GLiteral Value
   | GType TypeLabel
   | GList GenerateList
+  | GTime TimeLiteral
   | GObj (HashMap Text GenerateTree)
   deriving (Show, Eq)
-
--- data Literal
---   = GBool Bool
---   | GNumber Scientific
---   | GString String
---   | GArray [Literal]
---   | Null
 
 data GenerateList
   = Unbounded GenerateTree

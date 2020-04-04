@@ -19,9 +19,12 @@ extra-source-files:  CHANGELOG.md
 library
   exposed-modules: Data.MakeObj
                  , Data.MakeObj.AST
+                 , Data.MakeObj.AST.Time
                  , Data.MakeObj.GenerateObj
                  , Data.MakeObj.PP
                  , Data.MakeObj.Parser
+                 , Data.MakeObj.Parser.Shared
+                 , Data.MakeObj.Parser.Time
                  , Data.MakeObj.TreeEquality
   -- other-modules:
   -- other-extensions:
@@ -35,6 +38,7 @@ library
                      , reggie
                      , text
                      , time
+                     , iso8601-time
                      , vector
                      , non-empty
                      , QuickCheck
@@ -60,10 +64,11 @@ executable makeobj
 test-suite test
     type:       exitcode-stdio-1.0
     main-is:    Spec.hs
-    other-modules: MakeTest
+    other-modules: MakeTest, TimeTest
     build-depends: aeson
                  , base >= 4.11
                  , makeobj
+                 , megaparsec
                  , QuickCheck
                  , raw-strings-qq
                  , regex
