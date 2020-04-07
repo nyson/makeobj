@@ -24,30 +24,30 @@ prop_circle defs
        $ parsed === Right defs
 
 unit_literalBool = assertEqual "can consume literal bools"
-  (Right (GLiteral (Bool True))) 
+  (Right (GLiteral (LBool True))) 
   (parseGenerateTree [r|true|])
 
 unit_literalNull = assertEqual "can consume literal null"
-  (Right (GLiteral Data.Aeson.Null)) 
+  (Right (GLiteral LNull)) 
   (parseGenerateTree [r|null|])
 
 unit_literalNumber = assertEqual "can consume literal numbers"
-  (Right (GLiteral (Number 10.20))) 
+  (Right (GLiteral (LNumber 10.20))) 
   (parseGenerateTree "10.20")
 
 unit_literalString = assertEqual "can consume literal strings"
-  (Right (GLiteral (String "Hej"))) 
+  (Right (GLiteral (LString "Hej"))) 
   (parseGenerateTree [r|"Hej"|])
 
 unit_literalArray = assertEqual "can comsume literal arrays"
-  (Right (GList (LiteralList [GLiteral $ String "Hej"]))) 
+  (Right (GList (LiteralList [GLiteral $ LString "Hej"]))) 
   (parseGenerateTree [r|["Hej"]|])
 
 unit_literalObject = assertEqual "can comsume literal objects"
   expected
   (parseGenerateTree [r|{hej: "Hej"}|])
   where
-    expected = Right . GObj . HM.fromList $ [("hej", GLiteral (String "Hej"))]
+    expected = Right . GObj . HM.fromList $ [("hej", GLiteral (LString "Hej"))]
 
 prop_listLength :: GenerateList -> Defs -> Property
 prop_listLength gl defs = counterexample (pp gl) $case gl of

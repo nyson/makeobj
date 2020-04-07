@@ -38,7 +38,6 @@ tree = label "GenerateTree" $
   choice [ try $ GObj <$> object
          , try $ GList <$> list
          , try $ GRange <$> range
-         , try $ GTime <$> timeLiteral
          , GRx <$> sc rx
          , GType <$> typeLabel         
          , GLiteral <$> value
@@ -50,13 +49,14 @@ interleavedParser interleaver parser = choice
   , return []
   ]
 
-value :: Parser Value
+value :: Parser Literal
 value = label "Value Parser"
-  $ choice [ try $ Number <$> L.signed spaceParser L.scientific
-               , Bool <$> sc bool
-               , Null <$ sc (chars "null")
-               , String <$> sc limitedString
-               ]
+  $ choice [ try $ LTime <$> timeLiteral
+           , try $ LNumber <$> L.signed spaceParser L.scientific
+           , LBool <$> sc bool
+           , LNull <$ sc (chars "null")
+           , LString <$> sc limitedString
+           ]
   where bool = choice
               [ chars "true" $> True 
               , chars "false" $> False

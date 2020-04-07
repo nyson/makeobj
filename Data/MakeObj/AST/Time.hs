@@ -18,11 +18,19 @@ data TimeLiteral = TimeLiteral
   { tTime :: UTCTime
   , tDayGranularity :: DayGranularity
   , tTimeGranularity :: TimeGranularity
-  } deriving (Show, Eq)
+  } deriving Show
 
 instance PP TimeLiteral where 
   pp (TimeLiteral t dg NoTime) = showGranularDay t dg
   pp (TimeLiteral t dg tg) = showGranularDay t dg ++ "T" ++ showGranularTime t tg
+
+instance Eq TimeLiteral where
+  a == b | tTimeGranularity a /= tTimeGranularity b = False
+  a == b | tDayGranularity a  /= tDayGranularity b  = False
+  (TimeLiteral t1 dg tg) == (TimeLiteral t2 _ _) = case tg of
+    NoTime -> undefined
+    
+
 
 showGranularDay :: UTCTime -> DayGranularity -> String
 showGranularDay t = \case 
@@ -72,7 +80,6 @@ instance Arbitrary TimeLiteral where
     time <- timeGen 
     dayG <- arbitrary
     TimeLiteral time dayG <$> genTimeGranularity dayG
-
 
 genTimeGranularity :: DayGranularity -> Gen TimeGranularity
 genTimeGranularity = \case
