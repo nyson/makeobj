@@ -72,7 +72,7 @@ instance PP Literal where
   pp (LNumber s) = show s
   pp (LBool b) | b = "true"
                | otherwise = "false"  
-  pp (LNull) = "null"
+  pp LNull = "null"
   pp (LString t) = concat ["\"", T.unpack t, "\""]
   pp (LTime time) = pp time
 
@@ -163,7 +163,7 @@ instance PP GenerateList where
 
 prettyList :: Int -> GenerateList -> String
 prettyList i = \case
-  Unbounded tree  -> concat ["list of ", pretty i tree]
+  Unbounded tree  -> "list of " ++ pretty i tree
   ListOf len tree -> concat [show len, " of ", pretty i tree]
   RangedList min max tree -> concat [ show min, " to ", show max, " of " , pretty i tree ]
   LiteralList ls 

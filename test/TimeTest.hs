@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, QuasiQuotes, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 module TimeTest where
 
 import Test.Tasty.HUnit (assertEqual, Assertion, assertBool)

@@ -50,7 +50,7 @@ unit_literalObject = assertEqual "can comsume literal objects"
     expected = Right . GObj . HM.fromList $ [("hej", GLiteral (LString "Hej"))]
 
 prop_listLength :: GenerateList -> Defs -> Property
-prop_listLength gl defs = counterexample (pp gl) $case gl of
+prop_listLength gl defs = counterexample (pp gl) $ case gl of
   Unbounded _ -> label "List with any length"
     $ forAll mkList
     $ const True

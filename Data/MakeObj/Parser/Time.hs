@@ -1,10 +1,11 @@
-{-# LANGUAGE TupleSections, TypeApplications  #-}
+{-# LANGUAGE TupleSections  #-}
 module Data.MakeObj.Parser.Time where
 
 import Prelude hiding (fail)
 import Text.Read (readMaybe)
 import Data.Time (secondsToDiffTime, picosecondsToDiffTime, UTCTime(..), DiffTime)
 import Data.Time.Calendar (fromGregorian)
+import Data.Functor (($>))
 import Control.Applicative ((<|>))
 import Control.Monad.Fail
 import Data.MakeObj.Parser.Shared
@@ -38,14 +39,14 @@ timeLiteral = do
 timezone :: Parser DiffTime
 timezone = label "Timezone"
   $ choice [ try $ label "Timezone Hours and Minutes" $ char '+' *> hoursMinutes
-           , label "Z" $ char 'Z' *> pure 0]
+           , label "Z" $ char 'Z' $> 0]
 
 year :: Parser Integer
 year = label "Year" $ many digitChar >>= mread
 
 month,day :: Parser Int
 month = label "Month" $ char '-' *> many digitChar >>= mread
-day = label "Day" $ month
+day = label "Day" month
 
 hoursMinutes :: Parser DiffTime
 hoursMinutes = label "Hours and Minutes" 

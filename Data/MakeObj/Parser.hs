@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications, LambdaCase #-}
 module Data.MakeObj.Parser where
 
 import Data.Text (Text)
@@ -18,7 +17,6 @@ import Data.MakeObj.AST.Time (TimeLiteral)
 import Data.MakeObj.Parser.Time (timeLiteral)
 
 import Data.MakeObj.AST
-import Data.MakeObj.Parser.Time 
 import Data.MakeObj.Parser.Shared
 
 parseGenerateTree :: String -> Either Error GenerateTree
