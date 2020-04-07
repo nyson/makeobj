@@ -96,9 +96,9 @@ Generates a symbol from a predefined definition.
 #### Literals
 Syntax: `Literal`
 
-Example: `true`, `null`, `10.22`, `"Hagrid"`
+Example: `true`, `null`, `10.22`, `"Hagrid"`, `1985-10-25`
 
-Constructs a literal in the current generator.
+Constructs a literal in the current generator. Supports boolean, null, numbers, strings and ISO8601 datetimes.
 
 ### Lists
 Syntax: `[Generator1, Generator2, ...]`
