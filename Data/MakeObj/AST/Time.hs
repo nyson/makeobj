@@ -27,9 +27,29 @@ instance PP TimeLiteral where
 instance Eq TimeLiteral where
   a == b | tTimeGranularity a /= tTimeGranularity b = False
   a == b | tDayGranularity a  /= tDayGranularity b  = False
-  (TimeLiteral t1 dg tg) == (TimeLiteral t2 _ _) = case tg of
-    NoTime -> undefined
-    
+  (TimeLiteral t1 dg tg) == (TimeLiteral t2 _ _) 
+    = dayEqual dg && diffTimeEqual tg (utctDayTime t1) (utctDayTime t2)
+    where ((y1, m1, _), (y2, m2, _)) = (toGregorian $ utctDay t1, toGregorian $ utctDay t2)
+          dayEqual = \case
+            Year -> y1 == y2
+            Month -> y1 == y2 && m1 == m2
+            Day -> utctDay t1 == utctDay t2
+
+diffTimeEqual :: TimeGranularity -> DiffTime -> DiffTime -> Bool
+diffTimeEqual tg d1 d2 = case tg of
+  NoTime
+    -> True
+  HourMinute
+    -> diff1 `div` (10^12 * 60) == diff2 `div` (10^12 * 60)
+  HourMinuteSecondsTimezone
+    -> diffTimeEqual HourMinuteSeconds d1 d2
+  HourMinuteSeconds
+    -> diff1 `div` 10^12 == diff2 `div` 10^12
+  HourMinuteSecondsFractionsTimezone 
+    -> diffTimeEqual HourMinuteSecondsFractions d1 d2
+  HourMinuteSecondsFractions 
+    -> diff1 == diff2
+  where (diff1, diff2) = (diffTimeToPicoseconds d1, diffTimeToPicoseconds d2)
 
 
 showGranularDay :: UTCTime -> DayGranularity -> String
