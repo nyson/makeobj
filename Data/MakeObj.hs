@@ -18,6 +18,7 @@ import Data.MakeObj.AST (
 import Data.MakeObj.GenerateObj (generateObj, generateList)
 import Data.MakeObj.PP (pp, pprint)
 import Data.MakeObj.Parser hiding (rx)
+import Data.MakeObj.Parser.Shared (Error(..))
 import Data.MakeObj.TreeEquality (jsonStructure, jsonStructureEquality)
 import Data.Map (Map)
 import Data.Text (Text)

@@ -17,13 +17,13 @@ generateObj :: Defs -> GenerateTree -> Gen Value
 generateObj defs = \case
   GRx rx -> String . T.pack <$> R.rxGen rx
   GType tl -> case Prelude.lookup tl (unDefs defs) of
-      Nothing -> error $ "Missing typedef: " ++ pp tl
+      Nothing -> fail $ "Missing typedef: " ++ pp tl
       Just gt -> generateObj defs gt
   GObj obj -> Object . HM.fromList <$> mapM f (HM.toList obj)
     where f (a, t) = (a,) <$> generateObj defs t
-
   GList t -> Array . V.fromList <$> generateList defs t
   GRange (Range a b) -> Number . fromIntegral <$> elements [a .. b]
+  GLiteral v -> genLiteral v
 
 generateList :: Defs -> GenerateList -> Gen [Value]
 generateList defs = \case
@@ -33,3 +33,11 @@ generateList defs = \case
   RangedList min max t -> do
     len <- choose (min, max)
     replicateM len (generateObj defs t)
+
+genLiteral :: Literal -> Gen Value
+genLiteral = pure . \case
+  LNumber n -> Number n
+  LBool b -> Bool b
+  LNull -> Null
+  LString s -> String s
+  LTime t -> (String . T.pack . pp) t

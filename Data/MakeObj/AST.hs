@@ -8,12 +8,16 @@ import Data.Char (toUpper)
 import Data.Aeson (Value(..))
 import Data.HashMap.Strict (HashMap)
 import Data.List (intercalate)
-import Data.Scientific (Scientific)
+import Data.Scientific (Scientific, fromFloatDigits)
 import Data.MakeObj.PP (PP(..))
 import Data.Set (Set)
 import Data.Text (Text)
-import Test.QuickCheck (Arbitrary(..), Gen, listOf1, scale, elements, frequency, oneof)
+import Test.QuickCheck 
+  ( Arbitrary(..), Gen, listOf1, scale
+  , elements, frequency, oneof, choose)
 import Text.Reggie (Regex, genRegex, GenRegexOpts(..))
+
+import Data.MakeObj.AST.Time (TimeLiteral)
 
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Set as Set
@@ -56,21 +60,39 @@ instance Arbitrary (Range Int) where
     smaller <- arbitrary
     Range smaller . (smaller +) . abs <$> arbitrary
 
+data Literal 
+  = LNumber Scientific
+  | LBool Bool
+  | LNull
+  | LString Text
+  | LTime TimeLiteral
+  deriving (Show, Eq)
+
+instance PP Literal where
+  pp (LNumber s) = show s
+  pp (LBool b) | b = "true"
+               | otherwise = "false"  
+  pp LNull = "null"
+  pp (LString t) = concat ["\"", T.unpack t, "\""]
+  pp (LTime time) = pp time
+
+instance Arbitrary Literal where
+  arbitrary = oneof 
+    [ LNumber . fromFloatDigits <$> arbitrary @Double
+    , LBool <$> arbitrary
+    , pure LNull
+    , LString . T.pack <$> listOf1 (elements ['A'..'Z'])
+    , LTime <$> arbitrary
+    ]
+
 data GenerateTree
   = GRx Regex
   | GRange (Range Int)
-  | GLiteral Value
+  | GLiteral Literal
   | GType TypeLabel
   | GList GenerateList
   | GObj (HashMap Text GenerateTree)
   deriving (Show, Eq)
-
--- data Literal
---   = GBool Bool
---   | GNumber Scientific
---   | GString String
---   | GArray [Literal]
---   | Null
 
 data GenerateList
   = Unbounded GenerateTree
@@ -82,10 +104,6 @@ data GenerateList
 instance Arbitrary Value where
   arbitrary = frequency 
     [(1, return $ Bool True)]
-
-instance PP Value where
-  pp (Bool b) | b = "true"
-              | otherwise = "false"
 
 instance Arbitrary GenerateTree where
   arbitrary = (Set.fromList <$> listOf1 arbitrary) >>= genTree
@@ -145,7 +163,7 @@ instance PP GenerateList where
 
 prettyList :: Int -> GenerateList -> String
 prettyList i = \case
-  Unbounded tree  -> concat ["list of ", pretty i tree]
+  Unbounded tree  -> "list of " ++ pretty i tree
   ListOf len tree -> concat [show len, " of ", pretty i tree]
   RangedList min max tree -> concat [ show min, " to ", show max, " of " , pretty i tree ]
   LiteralList ls 
