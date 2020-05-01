@@ -2,14 +2,16 @@
 module Data.MakeObj.AST.Time where
 
 import Data.Time
-  ( Day(..), DiffTime, UTCTime(..)
+  ( Day(..), DiffTime, UTCTime(..), NominalDiffTime
   , toGregorian, fromGregorian
   , secondsToDiffTime, picosecondsToDiffTime
   , diffTimeToPicoseconds
-  , addUTCTime)
+  , addUTCTime, diffUTCTime
+  )
 import Data.Time.Calendar (isLeapYear)
 import Data.Maybe (fromMaybe)
 import Data.MakeObj.PP (PP(..))
+import Data.Ratio
 
 import Test.QuickCheck
 
@@ -191,3 +193,15 @@ instance Arbitrary TimeGranularity where
 
 instance Arbitrary DayGranularity where
   arbitrary = elements [Month, Day]
+
+-- genSeconds = ( $  $ nominalDay ) :: NominalDiffTime
+genSeconds :: (NominalDiffTime, NominalDiffTime) -> Gen NominalDiffTime
+genSeconds (a,b) = fromRational . fromIntegral <$> choose (fromNom a, fromNom b)
+  where fromNom :: NominalDiffTime -> Integer
+        fromNom = round . toRational
+
+genRangeBetween :: TimeLiteral -> TimeLiteral -> Gen TimeLiteral
+genRangeBetween (TimeLiteral time1 dg1 tg1) (TimeLiteral time2 dg2 tg2) = do
+  let diff = diffUTCTime time2 time1
+  rngDiff <- genSeconds (0, diff)
+  return $ TimeLiteral (addUTCTime rngDiff time1) (max dg1 dg2) (max tg1 tg2)
