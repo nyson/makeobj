@@ -9,7 +9,7 @@ module Data.MakeObj.Parser.Shared
 
 import Prelude hiding (fail)
 import Data.Void (Void)
-import Text.Megaparsec (Parsec, ParseErrorBundle, try, choice, label, parse, eof)
+import Text.Megaparsec (Parsec, ParseErrorBundle, try, choice, label, parse, eof, notFollowedBy)
 import Control.Applicative (many, some, (<|>))
 import Control.Monad (replicateM)
 import Text.Megaparsec.Char(space1, char, digitChar, letterChar, upperChar)
@@ -25,7 +25,7 @@ spaceParser :: Parser ()
 spaceParser = L.space space1 (L.skipLineComment "--") (L.skipBlockComment "/*" "*/")
 
 int :: Parser Int
-int = L.signed spaceParser L.decimal
+int = L.signed spaceParser L.decimal <* notFollowedBy (char '.')
 
 float :: Parser Double
 float  = L.signed spaceParser L.float

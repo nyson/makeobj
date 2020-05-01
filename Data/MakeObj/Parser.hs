@@ -69,7 +69,7 @@ range = choice
   , try . label "Int Range" $ IntRange
     <$> int <* sc (chars "to")
     <*> int
-  , label "Float Range" $ FloatRange
+  , try . label "Float Range" $ FloatRange
     <$> num <* sc (chars "to")
     <*> num
   ]
