@@ -22,10 +22,10 @@ sc p = spaceParser *> p <* spaceParser
 spaceParser :: Parser ()
 spaceParser = L.space space1 (L.skipLineComment "--") (L.skipBlockComment "/*" "*/")
 
-int :: (Integral n, Num n) => Parser n
+int :: Parser Int
 int = L.signed spaceParser L.decimal
 
-float :: (RealFloat n, Num n) => Parser n
+float :: Parser Double
 float  = L.signed spaceParser L.float
 
 chars :: String -> Parser ()

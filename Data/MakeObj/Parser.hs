@@ -66,12 +66,12 @@ range = choice
   [ try . label "Date Range" $ DateRange
     <$> timeLiteral <* sc (chars "to")
     <*> timeLiteral
-  , try . label "Float Range" $ FloatRange
-    <$> float <* sc (chars "to")
-    <*> float
-  , label "Int Range" $ IntRange
+  , try . label "Int Range" $ IntRange
     <$> int <* sc (chars "to")
     <*> int
+  , label "Float Range" $ FloatRange
+    <$> float <* sc (chars "to")
+    <*> float
   ]
 
 rx :: Parser Regex

@@ -72,13 +72,6 @@ $ makeobj School
 
 ## Syntax Specification
 ### Simple generators
-#### Ranges
-Syntax: `Int to Int`
-
-Example: `1 to 5`
-
-Generates a number from an inclusive range of symbols (currently only integers).
-
 #### Regexes
 Syntax: `/Regular Expression/`
 
@@ -121,6 +114,14 @@ Syntax: `{}`, `{field: Generator}`, `{fieldA: Generator, fieldB: Generator}`
 Example: `{name: /(Harry|Hagrid)/, from: /(Hogwarts|a shed)/}`
 
 Generates an JSON compatible object.
+
+#### Ranges
+Syntax: `Int to Int`, `Float to Float`, `ISO8601 to ISO8601`
+
+Example: `1 to 5`, `0.0 to 1.0`, `2014-12-25 to 2018-12-26`
+
+Generates a number from an inclusive range of symbols. Currently supports integers, floats and date ranges.
+
 
 ## Contribute
 I'll happily accept any contributions to the project, even if it's just a feature request in an issue!

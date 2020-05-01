@@ -50,7 +50,7 @@ notEqualSets as bs = foldl foldf [] as ++ onlyInA ++ onlyInB
 
 
 prop_circle :: Defs -> Property
-prop_circle defs = counterexample (prettyCounterexample defs parse)d
+prop_circle defs = counterexample (prettyCounterexample defs parsed)
                    $ parsed === Right defs
   where parsed = parseDefs (pp defs)
 

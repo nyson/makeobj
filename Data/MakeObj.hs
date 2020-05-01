@@ -25,7 +25,7 @@ import Data.MakeObj.Parser hiding (rx)
 import Data.MakeObj.Parser.Shared (Error, Parser)
 import Data.MakeObj.TreeEquality (jsonStructure, jsonStructureEquality)
 
-tryParser :: PP t => Parser t -> String -> IO ()
+tryParser :: (PP t, Show t) => Parser t -> String -> IO ()
 tryParser p input = case parse p "stdin" input of
   Left err -> do
     putStrLn "--==## ERROR ##==--"
@@ -33,3 +33,4 @@ tryParser p input = case parse p "stdin" input of
   Right v -> do
     putStrLn "--==## SUCCESS ##==--"
     putStrLn $ pp v
+    print v
