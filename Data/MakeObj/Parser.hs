@@ -12,14 +12,12 @@ import qualified Data.Text as T
 import Data.MakeObj.Parser.Time (timeLiteral)
 import Data.MakeObj.AST
 import Data.MakeObj.Parser.Shared
-import Control.Monad (unless)
-
 
 parseGenerateTree :: String -> Either Error GenerateTree
-parseGenerateTree = parse tree ""
+parseGenerateTree = parse (tree <* eof) ""
 
 parseDefs :: String -> Either Error Defs
-parseDefs = parse defs ""
+parseDefs = parse (defs <* eof) ""
 
 defs :: Parser Defs
 defs = Defs <$> label "Defs Config" (many def)

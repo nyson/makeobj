@@ -4,12 +4,12 @@ module Data.MakeObj.Parser.Shared
   , int, float, num
   , chars, spaceWrapped
   , digitChar, letterChar, label, upperChar
-  , parse, nOf
+  , parse, nOf, eof
   ) where
 
 import Prelude hiding (fail)
 import Data.Void (Void)
-import Text.Megaparsec (Parsec, ParseErrorBundle, try, choice, label, parse)
+import Text.Megaparsec (Parsec, ParseErrorBundle, try, choice, label, parse, eof)
 import Control.Applicative (many, some, (<|>))
 import Control.Monad (replicateM)
 import Text.Megaparsec.Char(space1, char, digitChar, letterChar, upperChar)

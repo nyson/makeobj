@@ -1,11 +1,11 @@
-module Data.MakeObj (
-  Defs(..), Error, TypeLabel(..),
-  GenerateTree(..),
-  GenerateList(..),
-  parseGenerateTree, parseDefs,
-  pp, pprint, jsonStructure, jsonStructureEquality,
-  generateObj, generateList, mkTypeLabel, genTree,
-  tryParser
+module Data.MakeObj
+  ( Defs(..), Error, TypeLabel(..)
+  , GenerateTree(..)
+  , GenerateList(..)
+  , parseGenerateTree, parseDefs, Error.errorBundlePretty
+  , pp, pprint, jsonStructure, jsonStructureEquality
+  , generateObj, generateList, mkTypeLabel, genTree
+  , tryParser
   ) where
 
 import Data.MakeObj.AST (
