@@ -3,7 +3,7 @@ module Main where
 
 import Test.QuickCheck (generate)
 import Control.Monad (when)
-import Data.MakeObj (parseGenerateTree, pp, generateObj, unDefs)
+import Data.MakeObj (parseGenerateTree, pp, generateObj, unDefs, errorBundlePretty)
 import Options (Options(..), loadOptions)
 import Definitions (loadDefDir, loadDefFile)
 
@@ -23,6 +23,6 @@ main = do
 
   case arg of
     [] -> putStrLn "No argument given! What would you like me to generate?"
-    (arg:_) -> case parseGenerateTree arg of
+    (args:_) -> case parseGenerateTree args of
       Right tree -> generate (generateObj defs tree) >>= encoder
-      Left error -> putStrLn $ "Unsupported syntax: \n\t" ++ show error
+      Left err -> putStrLn $ errorBundlePretty err

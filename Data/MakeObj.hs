@@ -1,13 +1,13 @@
-module Data.MakeObj (
-  Defs(..), Error(..), TypeLabel(..),
-  GenerateTree(..),
-  GenerateList(..),
-  parseGenerateTree, parseDefs,
-  pp, pprint, jsonStructure, jsonStructureEquality,
-  generateObj, generateList, mkTypeLabel, genTree
+module Data.MakeObj
+  ( Defs(..), Error, TypeLabel(..)
+  , GenerateTree(..)
+  , GenerateList(..)
+  , parseGenerateTree, parseDefs, Error.errorBundlePretty
+  , pp, pprint, jsonStructure, jsonStructureEquality
+  , generateObj, generateList, mkTypeLabel, genTree
+  , tryParser
   ) where
 
-import Control.Monad (replicateM)
 import Data.MakeObj.AST (
   GenerateTree(..),
   GenerateList(..),
@@ -15,19 +15,22 @@ import Data.MakeObj.AST (
   TypeLabel(..),
   mkTypeLabel,
   genTree)
-import Data.MakeObj.GenerateObj (generateObj, generateList)
-import Data.MakeObj.PP (pp, pprint)
-import Data.MakeObj.Parser hiding (rx)
-import Data.MakeObj.Parser.Shared (Error(..))
-import Data.MakeObj.TreeEquality (jsonStructure, jsonStructureEquality)
-import Data.Map (Map)
-import Data.Text (Text)
-import Data.Time.Clock
-import GHC.Generics
-import System.IO.Unsafe (unsafePerformIO)
-import Test.QuickCheck
-import Text.Reggie (rx, rxGen)
 
-import qualified Data.HashMap.Strict as HM
-import qualified Data.Map as Map
-import qualified Data.Text as T
+import qualified Text.Megaparsec.Error as Error
+import Text.Megaparsec (parse)
+
+import Data.MakeObj.GenerateObj (generateObj, generateList)
+import Data.MakeObj.PP (PP(..), pprint)
+import Data.MakeObj.Parser hiding (rx)
+import Data.MakeObj.Parser.Shared (Error, Parser)
+import Data.MakeObj.TreeEquality (jsonStructure, jsonStructureEquality)
+
+tryParser :: (PP t, Show t) => Parser t -> String -> IO ()
+tryParser p input = case parse p "stdin" input of
+  Left err -> do
+    putStrLn "--==## ERROR ##==--"
+    putStrLn $ Error.errorBundlePretty err
+  Right v -> do
+    putStrLn "--==## SUCCESS ##==--"
+    putStrLn $ pp v
+    print v

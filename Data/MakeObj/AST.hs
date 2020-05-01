@@ -1,23 +1,21 @@
 {-# LANGUAGE LambdaCase, GADTs, FlexibleInstances, TupleSections #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving, TypeApplications #-}
-{-# LANGUAGE StandaloneDeriving #-}
 
 module Data.MakeObj.AST where
 
 import Data.Char (toUpper)
-import Data.Aeson (Value(..))
 import Data.HashMap.Strict (HashMap)
 import Data.List (intercalate)
 import Data.Scientific (Scientific, fromFloatDigits)
 import Data.MakeObj.PP (PP(..))
 import Data.Set (Set)
 import Data.Text (Text)
-import Test.QuickCheck 
+import Test.QuickCheck
   ( Arbitrary(..), Gen, listOf1, scale
-  , elements, frequency, oneof, choose)
+  , elements, frequency, oneof )
 import Text.Reggie (Regex, genRegex, GenRegexOpts(..))
 
-import Data.MakeObj.AST.Time (TimeLiteral)
+import Data.MakeObj.AST.Time (TimeLiteral(..), arbitraryDiffTime, addDiff)
 
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Set as Set
@@ -49,18 +47,31 @@ mkTypeLabel = TypeLabel . T.pack
 instance PP TypeLabel where
   pp (TypeLabel s) = T.unpack s
 
-data Range t where
-  Range :: (Show t, Eq t, Num t) => t -> t -> Range t
+data Range where
+  IntRange   :: Int -> Int -> Range
+  FloatRange :: Double -> Double -> Range
+  DateRange  :: TimeLiteral -> TimeLiteral -> Range
+  deriving (Eq, Show)
 
-deriving instance Show t => Show (Range t)
-deriving instance Eq t => Eq (Range t)
+instance  PP Range where
+  pp = \case
+    IntRange a b -> pp a ++ " to " ++ pp b
+    FloatRange a b -> pp a ++ " to " ++ pp b
+    DateRange a b -> pp a ++ " to " ++ pp b
 
-instance Arbitrary (Range Int) where
-  arbitrary = do
-    smaller <- arbitrary
-    Range smaller . (smaller +) . abs <$> arbitrary
+instance Arbitrary Range where
+  arbitrary = oneof
+    [ arbRange IntRange
+    , arbRange FloatRange
+    , do time <- arbitrary
+         DateRange time <$> fmap (time `addDiff`) arbitraryDiffTime
+    ]
+    where arbRange :: (Num t, Arbitrary t) => (t -> t -> Range) -> Gen Range
+          arbRange mkRange = do
+            smaller <- arbitrary
+            mkRange smaller . (smaller +) . abs <$> arbitrary
 
-data Literal 
+data Literal
   = LNumber Scientific
   | LBool Bool
   | LNull
@@ -71,13 +82,14 @@ data Literal
 instance PP Literal where
   pp (LNumber s) = show s
   pp (LBool b) | b = "true"
-               | otherwise = "false"  
+               | otherwise = "false"
   pp LNull = "null"
   pp (LString t) = concat ["\"", T.unpack t, "\""]
   pp (LTime time) = pp time
 
+
 instance Arbitrary Literal where
-  arbitrary = oneof 
+  arbitrary = oneof
     [ LNumber . fromFloatDigits <$> arbitrary @Double
     , LBool <$> arbitrary
     , pure LNull
@@ -87,7 +99,7 @@ instance Arbitrary Literal where
 
 data GenerateTree
   = GRx Regex
-  | GRange (Range Int)
+  | GRange Range
   | GLiteral Literal
   | GType TypeLabel
   | GList GenerateList
@@ -101,10 +113,6 @@ data GenerateList
   | LiteralList [GenerateTree]
   deriving (Show, Eq)
 
-instance Arbitrary Value where
-  arbitrary = frequency 
-    [(1, return $ Bool True)]
-
 instance Arbitrary GenerateTree where
   arbitrary = (Set.fromList <$> listOf1 arbitrary) >>= genTree
 
@@ -116,9 +124,9 @@ genTree defs = frequency $ if defs == Set.empty
           otherGens =
             [ (10, GRx <$> genRegex GROpts {grAllowEmpty= False})
             , (5,  GRange <$> arbitrary)
-            , (2, GLiteral <$> arbitrary)
-            , (2, GList <$> genList defs)
-            , (2, GObj . HashMap.fromList
+            , (2,  GLiteral <$> arbitrary)
+            , (2,  GList <$> genList defs)
+            , (2,  GObj . HashMap.fromList
                 <$> scale (`div` 2) (listOf1 objectProducer))
             ]
           objectProducer = (,)
@@ -136,15 +144,12 @@ genList defs = scale (`div` 2) $ oneof
   , ListOf
     <$> fmap abs arbitrary
     <*> genTree defs
-  , do
-      min <- fmap abs arbitrary
-      max <- (min +) <$> fmap abs arbitrary
-      RangedList min max <$> genTree defs
+  , do baseLength <- fmap abs arbitrary
+       RangedList baseLength
+         <$> ((baseLength +) <$> fmap abs arbitrary)
+         <*> genTree defs
   , LiteralList <$> arbitrary
   ]
-
-instance Arbitrary Text where
-  arbitrary = T.pack <$> arbitrary
 
 newtype Defs = Defs { unDefs :: [(TypeLabel, GenerateTree)] }
   deriving (Show, Eq, Semigroup, Monoid)
@@ -163,10 +168,13 @@ instance PP GenerateList where
 
 prettyList :: Int -> GenerateList -> String
 prettyList i = \case
-  Unbounded tree  -> "list of " ++ pretty i tree
+  Unbounded tree -> "list of " ++ pretty i tree
   ListOf len tree -> concat [show len, " of ", pretty i tree]
-  RangedList min max tree -> concat [ show min, " to ", show max, " of " , pretty i tree ]
-  LiteralList ls 
+  RangedList minLen maxLen tree -> concat
+    [ show minLen, " to ", show maxLen
+    , " of " , pretty i tree
+    ]
+  LiteralList ls
     | length ls <= 1 -> concat ["[ ", concatMap (pretty (i+1)) ls, " ]"]
     | otherwise -> concat ["[ ", intercalate "," $ map (( ("\n" ++ tabs i) ++) . pretty (i+1)) ls, "\n", tabs i, "]"]
 
@@ -174,21 +182,21 @@ pretty :: Int -> GenerateTree -> String
 pretty _ (GRx rx) = "/" ++ Reggie.pp rx ++ "/"
 pretty _ (GLiteral v) = pp v
 pretty _ (GType tl) = pp tl
-pretty _ (GRange (Range a b)) = pp a ++ " to " ++ pp b
+pretty _ (GRange r) = pp r
 pretty i (GList ls) = prettyList (i+1) ls
 pretty i (GObj mp)= concat
   [ "{\n"
-  , intercalate ",\n" $ map
-    (\(k,v) -> concat [ tabs (i+1)
-                      , T.unpack k
-                      , ": "
-                      , pretty (i+1) v
-                      ])
-    (HashMap.toList mp)
+  , intercalate ",\n" $ map displayKeyValue (HashMap.toList mp)
   , "\n"
-  , tabs i
-  , "}"
+  , tabs i, "}"
   ]
+  where displayKeyValue (key, value) = concat
+          [ tabs (i+1)
+          , T.unpack key
+          , ": "
+          , pretty (i+1) value
+          ]
+
 
 tabs :: Int -> String
 tabs n = replicate (n*4) ' '

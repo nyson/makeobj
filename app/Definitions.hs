@@ -3,7 +3,9 @@ module Definitions
   , loadDefDir
   )where
 
-import System.Directory (getHomeDirectory, listDirectory, doesFileExist)
+import System.Directory
+  ( getHomeDirectory, listDirectory, doesFileExist, createDirectory
+  , doesDirectoryExist )
 import Control.Monad (unless)
 import Data.List (isSuffixOf)
 import Data.MakeObj (Error, Defs, parseDefs)
@@ -21,6 +23,8 @@ loadDefFile defScope = do
 loadDefDir :: IO (Either Error Defs)
 loadDefDir = do
   bd <- baseDir
+  directoryExists <- doesDirectoryExist bd
+  unless directoryExists $ createDirectory bd
   files <- map (bd <>) . filter (".defs" `isSuffixOf`) <$> listDirectory bd
   fmap mconcat . mapM parseDefs <$> mapM readFile files
 

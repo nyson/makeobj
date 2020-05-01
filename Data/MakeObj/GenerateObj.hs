@@ -4,11 +4,13 @@ module Data.MakeObj.GenerateObj where
 import Data.Aeson
 import Data.HashMap.Strict as HM
 import Data.MakeObj.AST
+import Data.MakeObj.AST.Time (genRangeBetween)
 import Data.MakeObj.PP
 import Test.QuickCheck
 import Control.Monad (replicateM)
 
-import qualified Data.Map.Lazy as Map
+import Data.Scientific (fromFloatDigits)
+
 import qualified Data.Text as T
 import qualified Data.Vector as V
 import qualified Text.Reggie as R
@@ -22,7 +24,9 @@ generateObj defs = \case
   GObj obj -> Object . HM.fromList <$> mapM f (HM.toList obj)
     where f (a, t) = (a,) <$> generateObj defs t
   GList t -> Array . V.fromList <$> generateList defs t
-  GRange (Range a b) -> Number . fromIntegral <$> elements [a .. b]
+  GRange (IntRange a b) -> Number . fromIntegral <$> choose (a , b)
+  GRange (FloatRange a b) -> Number . fromFloatDigits <$> choose (a, b)
+  GRange (DateRange a b) -> String . T.pack . pp <$> genRangeBetween a b
   GLiteral v -> genLiteral v
 
 generateList :: Defs -> GenerateList -> Gen [Value]
@@ -30,8 +34,8 @@ generateList defs = \case
   LiteralList ls -> mapM (generateObj defs) ls
   Unbounded t -> listOf (generateObj defs t)
   ListOf i t -> replicateM i (generateObj defs t)
-  RangedList min max t -> do
-    len <- choose (min, max)
+  RangedList minLen maxLen t -> do
+    len <- choose (minLen, maxLen)
     replicateM len (generateObj defs t)
 
 genLiteral :: Literal -> Gen Value
