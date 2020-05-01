@@ -1,6 +1,8 @@
-module Data.MakeObj.Parser.Shared 
+module Data.MakeObj.Parser.Shared
   ( Parser, Error, try, char, many, some, choice
-  , sc, spaceParser, int, float, chars, spaceWrapped
+  , sc, spaceParser
+  , int, float, num
+  , chars, spaceWrapped
   , digitChar, letterChar, label, upperChar
   , parse, nOf
   ) where
@@ -8,9 +10,9 @@ module Data.MakeObj.Parser.Shared
 import Prelude hiding (fail)
 import Data.Void (Void)
 import Text.Megaparsec (Parsec, ParseErrorBundle, try, choice, label, parse)
-import Control.Applicative (many, some)
+import Control.Applicative (many, some, (<|>))
 import Control.Monad (replicateM)
-import Text.Megaparsec.Char
+import Text.Megaparsec.Char(space1, char, digitChar, letterChar, upperChar)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 type Parser = Parsec Void String
@@ -27,6 +29,9 @@ int = L.signed spaceParser L.decimal
 
 float :: Parser Double
 float  = L.signed spaceParser L.float
+
+num :: Parser Double
+num = try float <|> fromIntegral <$> int
 
 chars :: String -> Parser ()
 chars = foldr ((>>) . char) mempty

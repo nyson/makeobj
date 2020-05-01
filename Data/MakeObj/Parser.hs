@@ -12,6 +12,8 @@ import qualified Data.Text as T
 import Data.MakeObj.Parser.Time (timeLiteral)
 import Data.MakeObj.AST
 import Data.MakeObj.Parser.Shared
+import Control.Monad (unless)
+
 
 parseGenerateTree :: String -> Either Error GenerateTree
 parseGenerateTree = parse tree ""
@@ -70,8 +72,8 @@ range = choice
     <$> int <* sc (chars "to")
     <*> int
   , label "Float Range" $ FloatRange
-    <$> float <* sc (chars "to")
-    <*> float
+    <$> num <* sc (chars "to")
+    <*> num
   ]
 
 rx :: Parser Regex
