@@ -1,14 +1,14 @@
-{-# LANGUAGE TupleSections, LambdaCase #-}
+{-# LANGUAGE TupleSections, LambdaCase, NamedFieldPuns #-}
 module Data.MakeObj.AST.Time where
 
-import Data.Time 
-  ( Day(..), DiffTime(..), UTCTime(..)
+import Data.Time
+  ( Day(..), DiffTime, UTCTime(..)
   , toGregorian, fromGregorian
   , secondsToDiffTime, picosecondsToDiffTime
-  , diffTimeToPicoseconds)
+  , diffTimeToPicoseconds
+  , addUTCTime)
 import Data.Time.Calendar (isLeapYear)
 import Data.Maybe (fromMaybe)
-
 import Data.MakeObj.PP (PP(..))
 
 import Test.QuickCheck
@@ -20,14 +20,24 @@ data TimeLiteral = TimeLiteral
   , tTimeGranularity :: TimeGranularity
   } deriving Show
 
-instance PP TimeLiteral where 
+fullSecond :: Num a => a
+fullSecond = 10^(12 :: Integer)
+
+addDiff :: TimeLiteral -> DiffTime -> TimeLiteral
+addDiff tl@TimeLiteral{tTime} diff = tl{tTime = addUTCTime (nom diff) tTime}
+  where nom = fromInteger . div fullSecond. diffTimeToPicoseconds
+
+arbitraryDiffTime :: Gen DiffTime
+arbitraryDiffTime = secondsToDiffTime . round  <$> choose (0 :: Double, 100*60*60*24*365)
+
+instance PP TimeLiteral where
   pp (TimeLiteral t dg NoTime) = showGranularDay t dg
   pp (TimeLiteral t dg tg) = showGranularDay t dg ++ "T" ++ showGranularTime t tg
 
 instance Eq TimeLiteral where
   a == b | tTimeGranularity a /= tTimeGranularity b = False
   a == b | tDayGranularity a  /= tDayGranularity b  = False
-  (TimeLiteral t1 dg tg) == (TimeLiteral t2 _ _) 
+  (TimeLiteral t1 dg tg) == (TimeLiteral t2 _ _)
     = dayEqual dg && diffTimeEqual tg (utctDayTime t1) (utctDayTime t2)
     where ((y1, m1, _), (y2, m2, _)) = (toGregorian $ utctDay t1, toGregorian $ utctDay t2)
           dayEqual = \case
@@ -40,24 +50,26 @@ diffTimeEqual tg d1 d2 = case tg of
   NoTime
     -> True
   HourMinute
-    -> diff1 `div` (10^12 * 60) == diff2 `div` (10^12 * 60)
+    -> diff1 `div` (fullSecond * 60) == diff2 `div` (fullSecond * 60)
+  HourMinuteTimezone
+    -> diff1 `div` (fullSecond * 60) == diff2 `div` (fullSecond * 60)
   HourMinuteSecondsTimezone
     -> diffTimeEqual HourMinuteSeconds d1 d2
   HourMinuteSeconds
-    -> diff1 `div` 10^12 == diff2 `div` 10^12
-  HourMinuteSecondsFractionsTimezone 
+    -> diff1 `div` fullSecond == diff2 `div` fullSecond
+  HourMinuteSecondsFractionsTimezone
     -> diffTimeEqual HourMinuteSecondsFractions d1 d2
-  HourMinuteSecondsFractions 
+  HourMinuteSecondsFractions
     -> diff1 == diff2
   where (diff1, diff2) = (diffTimeToPicoseconds d1, diffTimeToPicoseconds d2)
 
 
 showGranularDay :: UTCTime -> DayGranularity -> String
-showGranularDay t = \case 
+showGranularDay t = \case
   Year ->  ymd $ \y _ _ -> y
   Month -> ymd $ \y m _ -> concat [y, "-", m]
   Day ->   ymd $ \y m d -> concat [y, "-", m, "-", d]
-  where ymd f = (\(y,m,d) -> f (show y) (show2 m) (show2 d)) 
+  where ymd f = (\(y,m,d) -> f (show y) (show2 m) (show2 d))
             . toGregorian $ utctDay t
 
 showGranularTime :: UTCTime -> TimeGranularity -> String
@@ -69,20 +81,20 @@ showGranularTime t = \case
   HourMinuteSecondsTimezone -> concat [ hours, ":", minutes, ":", seconds, "Z"]
   HourMinuteSecondsFractions -> concat
     [ hours, ":", minutes, ":", seconds, ".", fractions]
-  HourMinuteSecondsFractionsTimezone -> concat 
+  HourMinuteSecondsFractionsTimezone -> concat
     [ hours, ":", minutes, ":", seconds, ".", fractions, "Z"]
-  where (hours, minutes, seconds, fractions) 
+  where (hours, minutes, seconds, fractions)
           = let ps = diffTimeToPicoseconds $ utctDayTime t
-                allseconds = ps `div` 10^12
-            in ( show2 $ (allseconds `div` (60*60)) `mod` 24 
-               , show2 $ (allseconds `div` 60) `mod` 60 
+                allseconds = ps `div` fullSecond
+            in ( show2 $ (allseconds `div` (60*60)) `mod` 24
                , show2 $ (allseconds `div` 60) `mod` 60
-               , show2 $ ps `mod` 10^12 )
+               , show2 $ (allseconds `div` 60) `mod` 60
+               , show2 $ ps `mod` fullSecond )
 
 show2 :: (Show i, Integral i) => i -> String
 show2 i | abs i <= 9 = '0':show i
         | otherwise  = show i
-   
+
 timeGen :: Gen UTCTime
 timeGen = do
   year <- choose (1970, 2200)
@@ -96,8 +108,8 @@ timeGen = do
 
 
 instance Arbitrary TimeLiteral where
-  arbitrary = do 
-    time <- timeGen 
+  arbitrary = do
+    time <- timeGen
     dayG <- arbitrary
     TimeLiteral time dayG <$> genTimeGranularity dayG
 
@@ -107,9 +119,9 @@ genTimeGranularity = \case
   _ -> return NoTime
 
 data DayGranularity
-  = Year 
-  | Month 
-  | Day 
+  = Year
+  | Month
+  | Day
   deriving (Eq, Ord, Show)
 
 data TimeGranularity
@@ -123,46 +135,46 @@ data TimeGranularity
   deriving (Eq, Ord, Show)
 
 mkDayLiteral :: Integer -> Maybe Int -> Maybe Int -> (Day, DayGranularity)
-mkDayLiteral year month day 
+mkDayLiteral year month day
   = ( fromGregorian year (fromMaybe 1 month) (fromMaybe 1 day)
     , maybe Year (const $ maybe Month (const Day) day) month
-    ) 
-  
-mkDateTimeLiteral :: Maybe (Integer, Integer) 
+    )
+
+mkDateTimeLiteral :: Maybe (Integer, Integer)
               -- ^ Hours and Minutes
-              -> Maybe (Either Integer (Integer, Double)) 
+              -> Maybe (Either Integer (Integer, Double))
               -- ^ Seconds or Seconds with fractions
-              -> Maybe (Integer, Integer) 
+              -> Maybe (Integer, Integer)
               -- ^ Timezone
               -> (DiffTime, TimeGranularity)
 mkDateTimeLiteral Nothing _ _ = (0, NoTime)
-mkDateTimeLiteral (Just hourMinutes) seconds timezone 
-  = case seconds of
-    Nothing 
+mkDateTimeLiteral (Just hourMinutes) maybeSeconds timezone
+  = case maybeSeconds of
+    Nothing
       -> (secondsToDiffTime $ hmTime hourMinutes + tzValue
          , maybe HourMinute (const HourMinuteTimezone) timezone
          )
     Just (Left seconds)
       -> ( secondsToDiffTime $ hmTime hourMinutes + seconds + tzValue
-         , maybe HourMinuteSeconds (const HourMinuteSecondsTimezone) 
+         , maybe HourMinuteSeconds (const HourMinuteSecondsTimezone)
             timezone
          )
     Just (Right (seconds, fractions))
       -> ( picosecondsToDiffTime $ addFrac (seconds + tzValue) fractions
-         , maybe HourMinuteSeconds (const HourMinuteSecondsTimezone) 
+         , maybe HourMinuteSeconds (const HourMinuteSecondsTimezone)
             timezone
          )
-    
+
   where hmTime :: (Integer, Integer) -> Integer
         hmTime (hours, minutes) = hours * 24 * 60 + minutes * 60
         addFrac :: Integer -> Double -> Integer
-        addFrac i = round . (* 10^12) . (+ fromInteger i) 
+        addFrac i = round . (* fullSecond) . (+ fromInteger i)
         tzValue = maybe 0 hmTime timezone
 
 granularityGen :: Gen (DayGranularity, TimeGranularity)
 granularityGen = do
-  dayG <- arbitrary 
-  (dayG, ) <$> case dayG of 
+  dayG <- arbitrary
+  (dayG, ) <$> case dayG of
     Day -> elements
       [ HourMinute, HourMinuteSeconds, HourMinuteSecondsTimezone
       , HourMinuteSecondsFractions, HourMinuteSecondsFractionsTimezone
@@ -170,8 +182,8 @@ granularityGen = do
     _ -> pure NoTime
 
 
-instance Arbitrary TimeGranularity where 
-  arbitrary = elements 
+instance Arbitrary TimeGranularity where
+  arbitrary = elements
     [ NoTime
     , HourMinute, HourMinuteSeconds, HourMinuteSecondsTimezone
     , HourMinuteSecondsFractions, HourMinuteSecondsFractionsTimezone

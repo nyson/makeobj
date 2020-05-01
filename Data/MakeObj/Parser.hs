@@ -1,21 +1,15 @@
 module Data.MakeObj.Parser where
 
 import Data.Text (Text)
-import Control.Monad (replicateM)
 import Data.HashMap.Strict (HashMap)
 import Text.Reggie (Regex)
 import Data.Functor (($>))
-import Data.Scientific (Scientific, scientific)
-import Data.Aeson (Value(..))
-import qualified Text.Reggie as Rx hiding (Null)
+import qualified Text.Reggie as Rx
 import qualified Data.HashMap.Strict as HM
 import qualified Text.Megaparsec.Char.Lexer as L
 import qualified Data.Text as T
-import qualified Data.Vector as V
 
-import Data.MakeObj.AST.Time (TimeLiteral)
 import Data.MakeObj.Parser.Time (timeLiteral)
-
 import Data.MakeObj.AST
 import Data.MakeObj.Parser.Shared
 
@@ -37,12 +31,12 @@ tree = label "GenerateTree" $
          , try $ GList <$> list
          , try $ GRange <$> range
          , GRx <$> sc rx
-         , GType <$> typeLabel         
+         , GType <$> typeLabel
          , GLiteral <$> value
          ]
 
 interleavedParser :: Parser b -> Parser a -> Parser [a]
-interleavedParser interleaver parser = choice 
+interleavedParser interleaver parser = choice
   [ (:) <$> sc parser <*> many (sc interleaver *> sc parser)
   , return []
   ]
@@ -56,10 +50,10 @@ value = label "Value Parser"
            , LString <$> sc limitedString
            ]
   where bool = choice
-              [ chars "true" $> True 
+              [ chars "true" $> True
               , chars "false" $> False
               ]
-        limitedString = T.pack <$> 
+        limitedString = T.pack <$>
           sc (char '"' *> many letterChar <* char '"')
 
 rxChar :: Parser Char
@@ -67,17 +61,23 @@ rxChar = label "Char" . choice $ letterChar
          : map char "+, ?:.*{}[]|()-1234567890-^"
 
 -- | Parses a range (an inclusive Int to Int generator)
-range :: Parser (Range Int)
-range = label "Int Range" $ Range
-  <$> num <* sc (chars "to")
-  <*> num
+range :: Parser Range
+range = choice
+  [ try . label "Date Range" $ DateRange
+    <$> timeLiteral <* sc (chars "to")
+    <*> timeLiteral
+  , try . label "Float Range" $ FloatRange
+    <$> float <* sc (chars "to")
+    <*> float
+  , label "Int Range" $ IntRange
+    <$> int <* sc (chars "to")
+    <*> int
+  ]
 
 rx :: Parser Regex
-rx = label "Regex Parser" $ try $ do
-  res <- Rx.parse <$> (char '/' *> many rxChar <* char '/')
-  case res of
-    Left err -> error "wtf"
-    Right rx -> return rx
+rx = label "Regex Parser" . try
+  $ either error return =<< Rx.parse
+  <$> (char '/' *> many rxChar <* char '/')
 
 typeLabel :: Parser TypeLabel
 typeLabel = label "TypeLabel" $ TypeLabel . T.pack <$> capitalizedString
@@ -85,12 +85,12 @@ typeLabel = label "TypeLabel" $ TypeLabel . T.pack <$> capitalizedString
 
 list :: Parser GenerateList
 list = label "List" $ choice
-          [ try $ Unbounded 
+          [ try $ Unbounded
             <$> (sc (chars "list") *> _of *> sc tree)
-          , try $ ListOf <$> (sc num <* _of) <*> tree'
+          , try $ ListOf <$> (sc int <* _of) <*> tree'
           , RangedList
-            <$> (sc num <* sc (chars "to"))
-            <*> (sc num <* _of)
+            <$> (sc int <* sc (chars "to"))
+            <*> (sc int <* _of)
             <*> tree'
           , LiteralList <$> spaceWrapped ('[', ']') (interleavedParser (char ',') tree)
           ]
@@ -101,7 +101,7 @@ object :: Parser (HashMap Text GenerateTree)
 object = label "Object" $ HM.fromList
          <$> spaceWrapped ('{', '}') (sc mkMapList)
   where
-    mkMapList = (:) 
+    mkMapList = (:)
       <$> sc mkMapItem
       <*> many (sc (char ',') *> sc mkMapItem)
     mkMapItem = (,)

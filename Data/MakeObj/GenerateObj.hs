@@ -22,7 +22,7 @@ generateObj defs = \case
   GObj obj -> Object . HM.fromList <$> mapM f (HM.toList obj)
     where f (a, t) = (a,) <$> generateObj defs t
   GList t -> Array . V.fromList <$> generateList defs t
-  GRange (Range a b) -> Number . fromIntegral <$> elements [a .. b]
+  GRange (IntRange a b) -> Number . fromIntegral <$> elements [a .. b]
   GLiteral v -> genLiteral v
 
 generateList :: Defs -> GenerateList -> Gen [Value]

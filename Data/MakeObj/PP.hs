@@ -13,7 +13,6 @@ instance PP t => PP (Maybe t) where
   pp (Just t) = "Just " ++ pp t
   pp Nothing = "Nothing"
 
-instance PP Int where
-  pp = show
-
+instance PP Int    where pp = show
+instance PP Double where pp = show
 instance PP String where pp = id

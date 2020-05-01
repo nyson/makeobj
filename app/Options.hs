@@ -1,16 +1,18 @@
 module Options where
 
-import Data.Set (Set)
-import qualified Data.Set as Set
 import System.Console.GetOpt
 import System.Environment (getArgs)
-import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Aeson (encode, Value)
 import Data.Aeson.Encode.Pretty (encodePretty)
 
 defaultOptions :: Options
-defaultOptions = Options False (BL8.putStrLn . encode) Nothing []
+defaultOptions = Options
+  { verbose= False
+  , encoder= BL8.putStrLn . encode
+  , scope= Nothing
+  , arg = []
+  }
 
 data Options = Options
     { verbose :: Bool
