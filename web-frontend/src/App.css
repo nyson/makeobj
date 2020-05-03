@@ -1,0 +1,112 @@
+.App {
+    background-color: #282c34;
+    color: white;
+    flex-direction: column;
+    align-items: center;
+
+    display: flex;
+    min-height: 100vh;
+}
+
+.App-header {
+  background-color: #282c34;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+header {
+    background-color: #f0f0f0;
+    width: 100%;
+    color: #282c34;
+    text-align: center;
+}
+
+.column {
+    min-width: 500px;
+    margin: 0px;
+    flex-direction: column;
+    display: flex;
+    align-items: center;
+    padding: 0px;
+}
+
+.column h2 {
+    margin-top: 10px;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+}
+
+.column hr {
+    border: 0;
+    margin: 2px 0px 5px 2px;
+    background: /* gradient can be an image */
+        linear-gradient(
+            to right,
+            red 0%,
+            purple 12%,
+            green 47%,
+            blue 100%
+        )                    left
+                       bottom
+                       #777
+                       no-repeat;
+    width: 80%;
+    height: 4px;
+}
+
+.switch {
+    color: #657b83;
+    cursor: pointer;
+}
+
+.rowLane {
+    flex-direction: row;
+    display: flex;
+    /* align-items: center */
+}
+
+textarea {
+    width: 95%;
+    min-height: 350px;
+
+    border: 0;
+    padding: 10px;
+    resize: vertical;
+    margin: 0;
+    padding: 0;
+}
+
+.generate {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    width: 95%;
+    color: #;
+    font-size: 2em;
+    color: #fdf6e3;
+    margin-top: 5px;
+    background-color: #586e75;
+}
+
+.colWidth { max-width: 500px;}
+
+.ReactJsonSyntaxHighlighter {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+    color: #E8E2B7;
+    border: solid 7px transparent;
+    padding: 10px;
+    /* border-image: linear-gradient( */
+    /*     red, */
+    /*     purple */
+    /* ) 1 100%; */
+    width: 400px;
+}
+
+
+
+.ReactJsonSyntaxHighlighter .key { color: #d0d2d4;  }
+.ReactJsonSyntaxHighlighter .string { color: #93C763; }
+.ReactJsonSyntaxHighlighter .number { font-weight: bold; color: #FFCD22; }
+.ReactJsonSyntaxHighlighter .boolean { font-weight: bold; color: #678CB1; }
