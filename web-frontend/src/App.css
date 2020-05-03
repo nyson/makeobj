@@ -1,3 +1,19 @@
+@media all and (min-width: 1000px) {
+  .rowLane {
+    flex-direction: row;
+  }
+}
+
+@media all and (max-width: 1000px) {
+  .rowLane {
+    flex-direction: column;
+  }
+}
+
+.rowLane {
+  display: flex;
+}
+
 .App {
     background-color: #282c34;
     color: white;
@@ -61,21 +77,14 @@ header {
     cursor: pointer;
 }
 
-.rowLane {
-    flex-direction: row;
-    display: flex;
-    /* align-items: center */
-}
 
 textarea {
     width: 95%;
     min-height: 350px;
-
-    border: 0;
+    box-sizing: border-box;
+    border: 0px;
     padding: 10px;
     resize: vertical;
-    margin: 0;
-    padding: 0;
 }
 
 .generate {
