@@ -3,4 +3,7 @@
 /dist/
 /dist-newstyle/
 /report.html
+/web-frontend/node_modules/*
 .vscode/tasks.json
+/web-frontend/build/*
+/web-frontend/public/*
