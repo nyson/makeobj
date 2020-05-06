@@ -8,6 +8,7 @@
 @media all and (max-width: 1000px) {
   .rowLane {
     flex-direction: column;
+    flex-shrink: 0;
   }
 }
 
@@ -46,7 +47,6 @@ header h1 {
 
 .column {
   flex-grow: 1;
-  max-width: 600px;
   flex-basis: 0;
   margin: 0px;
   padding: 0px;
@@ -121,7 +121,7 @@ textarea {
 
 .colWidth { max-width: 500px;}
 
-.ReactJsonSyntaxHighlighter {
+.ReactJsonSyntaxHighlighter, .errorPre {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
   color: #E8E2B7;
   border: solid 7px transparent;
@@ -130,7 +130,8 @@ textarea {
   /*     red, */
   /*     purple */
   /* ) 1 100%; */
-  width: 90%;
+  width: 80%;
+  padding-left: 10%;
   overflow-x: auto;
 }
 
@@ -140,6 +141,7 @@ textarea {
 .ReactJsonSyntaxHighlighter .string { color: #F18F01; }
 .ReactJsonSyntaxHighlighter .number { font-weight: bold; color: #99C24D; }
 .ReactJsonSyntaxHighlighter .boolean { font-weight: bold; color: #C95BAB; }
+.ReactJsonSyntaxHighlighter .error { font-weight: bold; color: #e00;}
 
 
 /* unvisited link */
