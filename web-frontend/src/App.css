@@ -1,3 +1,4 @@
+
 @media all and (min-width: 1000px) {
   .rowLane {
     flex-direction: row;
@@ -11,17 +12,19 @@
 }
 
 .rowLane {
+  width: 100%;
   display: flex;
+  justify-content: center;
 }
 
 .App {
-    background-color: #282c34;
-    color: white;
-    flex-direction: column;
-    align-items: center;
+  background-color: #282c34;
+  color: white;
+  flex-direction: column;
+  align-items: center;
 
-    display: flex;
-    min-height: 100vh;
+  display: flex;
+  min-height: 100vh;
 }
 
 .App-header {
@@ -31,91 +34,131 @@
 }
 
 header {
-    background-color: #f0f0f0;
-    width: 100%;
-    color: #282c34;
-    text-align: center;
+  background-color: #282c34;
+  width: 100%;
+  color: #f0f0f0;
+  text-align: center;
+}
+
+header h1 {
+  margin: .3em;
 }
 
 .column {
-    min-width: 500px;
-    margin: 0px;
-    flex-direction: column;
-    display: flex;
-    align-items: center;
-    padding: 0px;
+  flex-grow: 1;
+  max-width: 600px;
+  flex-basis: 0;
+  margin: 0px;
+  padding: 0px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .column h2 {
-    margin-top: 10px;
-    width: 100%;
-    text-align: center;
-    margin-bottom: 0px;
-    padding-bottom: 0px;
+  margin-top: 10px;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 0px;
+  padding-bottom: 0px;
 }
 
 .column hr {
-    border: 0;
-    margin: 2px 0px 5px 2px;
-    background: /* gradient can be an image */
-        linear-gradient(
-            to right,
-            red 0%,
-            purple 12%,
-            green 47%,
-            blue 100%
-        )                    left
-                       bottom
-                       #777
-                       no-repeat;
-    width: 80%;
-    height: 4px;
+  border: 0;
+  margin: 2px 0px 5px 2px;
+  background: /* gradient can be an image */
+    linear-gradient(
+      to right,
+      #006E90 0%,
+      #C95BAB 20%,
+      #90D7FF 40%,
+      #F18F01 60%,
+      #99C24D 80%
+    )                    left
+                   bottom
+                   #777
+                   no-repeat;
+  width: 80%;
+  height: 4px;
+}
+
+.column p {
+  padding: 10px;
+  margin: 10px;
+
+}
+
+.column h3 {
+  padding: 10px;
+  margin: 10px;
 }
 
 .switch {
-    color: #657b83;
-    cursor: pointer;
+  color: #657b83;
+  cursor: pointer;
 }
 
 
 textarea {
-    width: 95%;
-    min-height: 350px;
-    box-sizing: border-box;
-    border: 0px;
-    padding: 10px;
-    resize: vertical;
+  width: 100%;
+  min-height: 350px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  resize: vertical;
 }
 
 .generate {
-    border: 0;
-    margin: 0;
-    padding: 0;
-    width: 95%;
-    color: #;
-    font-size: 2em;
-    color: #fdf6e3;
-    margin-top: 5px;
-    background-color: #586e75;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  color: #;
+  font-size: 2em;
+  color: #fdf6e3;
+  background-color: #586e75;
 }
 
 .colWidth { max-width: 500px;}
 
 .ReactJsonSyntaxHighlighter {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
-    color: #E8E2B7;
-    border: solid 7px transparent;
-    padding: 10px;
-    /* border-image: linear-gradient( */
-    /*     red, */
-    /*     purple */
-    /* ) 1 100%; */
-    width: 400px;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  color: #E8E2B7;
+  border: solid 7px transparent;
+  padding: 10px;
+  /* border-image: linear-gradient( */
+  /*     red, */
+  /*     purple */
+  /* ) 1 100%; */
+  width: 90%;
+  border: 1px dashed #faf;
+  overflow-x: auto;
 }
 
+.ReactJsonSyntaxHighlighter span { word-wrap: break-word; }
+
+.ReactJsonSyntaxHighlighter .key { color: #90D7FF;  }
+.ReactJsonSyntaxHighlighter .string { color: #F18F01; }
+.ReactJsonSyntaxHighlighter .number { font-weight: bold; color: #99C24D; }
+.ReactJsonSyntaxHighlighter .boolean { font-weight: bold; color: #C95BAB; }
 
 
-.ReactJsonSyntaxHighlighter .key { color: #d0d2d4;  }
-.ReactJsonSyntaxHighlighter .string { color: #93C763; }
-.ReactJsonSyntaxHighlighter .number { font-weight: bold; color: #FFCD22; }
-.ReactJsonSyntaxHighlighter .boolean { font-weight: bold; color: #678CB1; }
+/* unvisited link */
+a:link {
+  color: #C95BAB;
+}
+
+/* visited link */
+a:visited {
+  color: #C95BAB;
+}
+
+/* mouse over link */
+a:hover {
+  color: #F18F01;
+}
+
+/* selected link */
+a:active {
+  color: #90D7FF;
+}
