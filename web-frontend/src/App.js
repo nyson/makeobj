@@ -1,6 +1,6 @@
 import React from 'react';
-import ReactJsonSyntaxHighlighter from 'react-json-syntax-highlighter';
 import {useState} from 'react';
+import JSONSyntaxHighlighter from './JSONSyntaxHighlighter.js'
 import * as defaults from './defaults.js';
 import './App.css';
 
@@ -8,34 +8,32 @@ function CodeBlock(props) {
   const generated = props.block
   console.log(generated);
   if(generated.error == null) {
-    return (<ReactJsonSyntaxHighlighter obj={generated.code} />)
+    return <JSONSyntaxHighlighter codeBlock={generated.code} />
   } else {
     return (
-      <pre className="ReactJsonSyntaxHighlighter">
-        <span className="error">
-          {generated.error}
-        </span>
+      <pre className="error">
+        {generated.error}
       </pre>
     )
   }
-
 }
 
 function Toggle(props) {
 
-    return (
-        <span className="switch"
-              onClick={() => props.toggler(!props.value)}
-        >
-          {props.text }
-        </span>
-    );
+  return (
+    <span className="switch"
+      onClick={() => props.toggler(!props.value)}
+    >
+      {props.text }
+    </span>
+  );
 }
 
 function App() {
   let [defsVisible, setDefsVisibility] = useState(false);
   let [inputCode, setInputCode] = useState(defaults.structure);
   let [defs, setDefs] = useState(defaults.defs);
+
   let [generated, setGenerated] = useState({
     isLoaded: false,
     code: defaults.genObj,
@@ -48,7 +46,17 @@ function App() {
 
   const generate = () => {
     fetch("./api", {method: 'POST', body: JSON.stringify({input: inputCode, defs})})
-      .then(response => response.json())
+      .then(response => {
+        if(response.status === 200)
+          return response.json()
+        else {
+          return Promise.reject({
+            errorType: 'bad_response',
+            responseBody: response.text(),
+            status: response.status
+          });
+        }
+      })
       .then(generatedJson => {
         console.log(generatedJson);
         setGenerated({
@@ -57,6 +65,20 @@ function App() {
           error: generatedJson.cgError
         });
         jumpToGeneratedHeader();
+      })
+      .catch(err => {
+        switch(err.errorType){
+          default:
+            console.log(err);
+            break;
+          case 'bad_response':
+            err.responseBody.then(responseText =>
+              setGenerated({
+                isLoaded: true,
+                code: null,
+                cgError: responseText
+            }));
+        }
       });
   };
 
@@ -83,7 +105,7 @@ function App() {
         </div>
 
         <div className="column"
-             style={{display: defsVisible ? "flex" : "none"}} >
+          style={{display: defsVisible ? "flex" : "none"}} >
           <h2>
             <Toggle toggler={setDefsVisibility}
               value={defsVisible}
@@ -108,9 +130,9 @@ function App() {
       <div className="column">
         <h3>What is this?</h3>
         <p>This is <strong>MakeObj</strong>, the JSON object generator.
-          MakeObj can create a JSON object from a given input, called
-          a <em>structure</em>. Please try it above by
-          pressing the button <em>Generate JSON</em> above.            
+                                                            MakeObj can create a JSON object from a given input, called
+    a <em>structure</em>. Please try it above by
+    pressing the button <em>Generate JSON</em> above.            
         </p>
 
         <p>Next to the structure tab, you will see a tab called <em>definitions</em>.

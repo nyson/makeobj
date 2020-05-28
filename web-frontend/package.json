@@ -9,7 +9,6 @@
     "http-proxy-middleware": "^1.0.3",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-json-syntax-highlighter": "0.1.17",
     "react-scripts": "3.4.1"
   },
   "scripts": {
