@@ -22,6 +22,7 @@ library
                  , Data.MakeObj.AST.Time
                  , Data.MakeObj.GenerateObj
                  , Data.MakeObj.PP
+                 , Data.MakeObj.CountNodes
                  , Data.MakeObj.Parser
                  , Data.MakeObj.Parser.Shared
                  , Data.MakeObj.Parser.Time
@@ -30,8 +31,10 @@ library
   -- other-extensions:
   build-depends:       base >=4.12 && <4.13
                      , aeson
+                     , mtl
                      , bytestring
                      , containers
+                     , hashable
                      , scientific
                      , unordered-containers
                      , megaparsec >= 7.0

@@ -1,18 +1,21 @@
 {-# LANGUAGE LambdaCase, GADTs, FlexibleInstances, TupleSections #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving, TypeApplications #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, TypeApplications, DeriveGeneric #-}
 
 module Data.MakeObj.AST where
 
 import Data.Char (toUpper)
+import GHC.Generics (Generic)
+import Data.Hashable (Hashable)
 import Data.HashMap.Strict (HashMap)
 import Data.List (intercalate)
 import Data.Scientific (Scientific, fromFloatDigits)
 import Data.MakeObj.PP (PP(..))
 import Data.Set (Set)
 import Data.Text (Text)
+import Data.Aeson (ToJSON, toJSON, Value(String))
 import Test.QuickCheck
   ( Arbitrary(..), Gen, listOf1, scale
-  , elements, frequency, oneof )
+  , elements, frequency, oneof, getSize )
 import Text.Reggie (Regex, genRegex, GenRegexOpts(..))
 
 import Data.MakeObj.AST.Time (TimeLiteral(..), arbitraryDiffTime, addDiff)
@@ -36,10 +39,15 @@ upperCase :: Gen Text
 upperCase =  tMapHead toUpper <$> simpleText
 
 newtype TypeLabel = TypeLabel Text
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Generic)
+
+instance Hashable TypeLabel
+
+instance ToJSON TypeLabel where
+  toJSON (TypeLabel txt) = String txt
 
 instance Arbitrary TypeLabel where
-  arbitrary = TypeLabel <$> upperCase
+  arbitrary = TypeLabel . T.take 5 <$> upperCase
 
 mkTypeLabel :: String -> TypeLabel
 mkTypeLabel = TypeLabel . T.pack
@@ -117,17 +125,20 @@ instance Arbitrary GenerateTree where
   arbitrary = (Set.fromList <$> listOf1 arbitrary) >>= genTree
 
 genTree :: Set TypeLabel -> Gen GenerateTree
-genTree defs = frequency $ if defs == Set.empty
-                           then otherGens
-                           else tlGen:otherGens
-    where tlGen = (10, GType <$> elements defList)
-          otherGens =
-            [ (10, GRx <$> genRegex GROpts {grAllowEmpty= False})
-            , (5,  GRange <$> arbitrary)
-            , (2,  GLiteral <$> arbitrary)
-            , (2,  GList <$> genList defs)
-            , (2,  GObj . HashMap.fromList
+genTree defs = getSize >>= frequency . \case
+  s | s > 20            -> complexGens
+    | defs == Set.empty -> literalGens
+    | otherwise         -> tlGen:literalGens
+    where tlGen = (5, GType <$> elements defList)
+          complexGens =
+            [ (2, GList <$> scale (`div` 2) (genList defs))
+            , (2, GObj . HashMap.fromList
                 <$> scale (`div` 2) (listOf1 objectProducer))
+            ]
+          literalGens =
+            [ (5, GRx      <$> scale (`div` 10) (genRegex GROpts {grAllowEmpty= False}))
+            , (5, GRange   <$> arbitrary)
+            , (2, GLiteral <$> arbitrary)
             ]
           objectProducer = (,)
             <$> simpleText
@@ -139,7 +150,7 @@ instance Arbitrary GenerateList where
 
 genList :: Set TypeLabel -> Gen GenerateList
 genList defs | defs == Set.empty = error "Empty definition set given!"
-genList defs = scale (`div` 2) $ oneof
+genList defs = oneof
   [ Unbounded <$> genTree defs
   , ListOf
     <$> fmap abs arbitrary

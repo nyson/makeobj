@@ -1,13 +1,19 @@
-{-# LANGUAGE LambdaCase, TupleSections #-}
+{-# LANGUAGE LambdaCase, TupleSections, NamedFieldPuns #-}
 module Data.MakeObj.GenerateObj where
 
 import Data.Aeson
-import Data.HashMap.Strict as HM
+import qualified Data.Set as Set
+import Data.Set (Set)
+
+import qualified Data.HashMap.Strict as HM
+import Data.HashMap.Strict (HashMap)
 import Data.MakeObj.AST
 import Data.MakeObj.AST.Time (genRangeBetween)
 import Data.MakeObj.PP
 import Test.QuickCheck
 import Control.Monad (replicateM)
+
+import Control.Monad.Writer
 
 import Data.Scientific (fromFloatDigits)
 
@@ -45,3 +51,28 @@ genLiteral = pure . \case
   LNull -> Null
   LString s -> String s
   LTime t -> (String . T.pack . pp) t
+
+newtype LinkOptions = LinkOptions
+  { allowCyclicDependencies :: Bool
+  } deriving (Eq, Show)
+
+data LinkedGenerateTree = LinkedGenerateTree
+  { mainNode :: GenerateTree
+  , avaiableDefs :: HashMap TypeLabel GenerateTree
+  }
+
+hasCycles :: Defs -> GenerateTree -> Bool
+hasCycles = go Set.empty
+  where go :: Set TypeLabel -> Defs -> GenerateTree -> Bool
+        go touched defs = \case
+          GType lbl
+            | lbl `Set.member` touched -> True
+            | otherwise -> case lookup lbl (unDefs defs) of
+                Just tree -> go (Set.insert lbl touched) defs tree
+                Nothing -> False
+          GObj hm -> any (go touched defs) . map snd $ HM.toList hm
+          GList (RangedList _ _ t) -> go touched defs t
+          GList (ListOf _ t) -> go touched defs t
+          GList (Unbounded t) -> go touched defs t
+          GList (LiteralList ts) -> any (go touched defs) ts
+          _ -> False
