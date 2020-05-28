@@ -2,11 +2,12 @@
 module Main where
 
 import Web.Scotty
-import GHC.Generics
+import GHC.Generics (Generic)
 import qualified Data.Aeson as Aeson
 import Network.Wai.Middleware.Static
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Data.MakeObj  (generateJson)
+import Data.MakeObj (generateBalancedJsonWithMeta, ObjectPackage(..))
+import Data.MakeObj.CountNodes (Meta)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson (Value)
 
@@ -20,6 +21,7 @@ instance Aeson.FromJSON CodeGenRequest
 data CodeGenResponse = CodeGenResp
   { code :: Value
   , cgError :: Maybe String
+  , meta :: Maybe Meta
   } deriving (Generic, Show)
 instance Aeson.ToJSON CodeGenResponse
 
@@ -32,13 +34,17 @@ main = scotty 1234 $ do
   middleware logStdoutDev
   post "/api" $ do
     CodeGenReq{input, defs} <- jsonData
-    liftIO (generateJson input defs) >>= \case
+    liftIO (generateBalancedJsonWithMeta 250 input defs) >>= \case
       Left err -> json $ CodeGenResp
         { code = ""
         , cgError = Just err
+        , meta = Nothing
         }
-      Right codeGen -> json $ CodeGenResp
-        { code = codeGen
+      Right (ObjectPackage{generatedCode, metadata}) -> json $ CodeGenResp
+        { code = generatedCode
         , cgError = Nothing
+        , meta = Just metadata
         }
   get "/" $ file (baseUrl <> "index.html")
+
+

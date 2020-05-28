@@ -19,6 +19,7 @@
 }
 
 .App {
+  font-family: Helvetica, Arial;
   background-color: #282c34;
   color: white;
   flex-direction: column;
@@ -121,31 +122,33 @@ textarea {
 
 .colWidth { max-width: 500px;}
 
-.ReactJsonSyntaxHighlighter, .errorPre {
+.JsonSyntaxHL, .errorPre {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
   color: #E8E2B7;
+  font-size: 0.8em;
   border: solid 7px transparent;
   padding: 10px;
   /* border-image: linear-gradient( */
   /*     red, */
   /*     purple */
   /* ) 1 100%; */
-  width: 80%;
+  /* width: 80%; */
   padding-left: 10%;
   overflow-x: auto;
 }
 
-.ReactJsonSyntaxHighlighter span { word-wrap: break-word; }
+.JsonSyntaxHL span { word-wrap: break-word; }
 
-.ReactJsonSyntaxHighlighter .key { color: #90D7FF;  }
-.ReactJsonSyntaxHighlighter .string { color: #F18F01; }
-.ReactJsonSyntaxHighlighter .number { font-weight: bold; color: #99C24D; }
-.ReactJsonSyntaxHighlighter .boolean { font-weight: bold; color: #C95BAB; }
-.ReactJsonSyntaxHighlighter .error { font-weight: bold; color: #e00;}
+ .key { color: #90D7FF;  }
+ .string { color: #F18F01; }
+ .number { font-weight: bold; color: #99C24D; }
+ .boolean { font-weight: bold; color: #C95BAB; }
+ .error { font-weight: bold; color: #e00;}
 
 
 /* unvisited link */
-a:link {
+
+ a:link {
   color: #C95BAB;
 }
 
