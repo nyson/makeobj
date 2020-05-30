@@ -18,4 +18,3 @@ deb: build-package
 cheaty-deb:
 	cp -f LICENSE debian/copyright \
 	&& debuild -us -uc -b
-	&& mv ../makeobj_*
