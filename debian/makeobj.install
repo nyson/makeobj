@@ -1,0 +1,4 @@
+_build/makeobj /usr/bin/
+_build/makeobj-web-app /usr/bin/
+_build/makeobj-web-frontend/ /var/
+makeobj.service /lib/systemd/system

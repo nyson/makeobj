@@ -6,3 +6,4 @@
 /web-frontend/node_modules/*
 .vscode/tasks.json
 /web-frontend/build/*
+/_build/

@@ -1,0 +1,13 @@
+[Unit]
+Description=makeobj web service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/makeobj-web-app -h /var/makeobj-web-frontend/
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/var/makeobj-web-frontend/
+
+[Install]
+WantedBy=multi-user.target
