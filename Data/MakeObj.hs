@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
 module Data.MakeObj
   ( Defs(..), Error, TypeLabel(..)
   , GenerateTree(..)
@@ -33,13 +32,10 @@ import Data.Aeson (Value)
 import Test.QuickCheck (generate)
 import Text.Megaparsec.Error(errorBundlePretty)
 
-
-
 data ObjectPackage = ObjectPackage
   { generatedCode :: Value
   , metadata :: Meta
   }
-
 
 generateBalancedJson :: Int -> String -> String -> IO (Either String Value)
 generateBalancedJson maxSize typeInput defsInput = fmap generatedCode
@@ -59,8 +55,6 @@ generateBalancedJsonWithMeta maxSize typeInput defsInput
       let m = meta t'
       t'' <- balanceUnbounded maxNodes m t'
       return (t'', m)
-
-
 
 tryParser :: (PP t, Show t) => Parser t -> String -> IO ()
 tryParser p input = case parse p "stdin" input of

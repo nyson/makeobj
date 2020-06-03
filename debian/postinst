@@ -1,0 +1,7 @@
+#!/bin/sh
+addgroup --system makeobj-web-app 2> /dev/null > /dev/null ; true
+adduser --system makeobj-web-app \
+        --home /var/lib/makeobj-web-frontend \
+        --ingroup makeobj-web-app 2> /dev/null > /dev/null ; true
+deb-systemd-helper enable makeobj.service
+deb-systemd-helper start  makeobj.service

@@ -6,3 +6,10 @@
 /web-frontend/node_modules/*
 .vscode/tasks.json
 /web-frontend/build/*
+/_build/
+/debian/.debhelper/
+/debian/copyright
+/debian/files
+/debian/makeobj.debhelper.log
+/debian/makeobj.substvars
+/debian/makeobj/

@@ -1,7 +1,7 @@
-{-# LANGUAGE LambdaCase, TupleSections, NamedFieldPuns #-}
+{-# LANGUAGE LambdaCase, TupleSections #-}
 module Data.MakeObj.GenerateObj where
 
-import Data.Aeson
+import Data.Aeson (Value(..))
 import qualified Data.Set as Set
 import Data.Set (Set)
 
@@ -9,12 +9,9 @@ import qualified Data.HashMap.Strict as HM
 import Data.HashMap.Strict (HashMap)
 import Data.MakeObj.AST
 import Data.MakeObj.AST.Time (genRangeBetween)
-import Data.MakeObj.PP
-import Test.QuickCheck
+import Data.MakeObj.PP (pp)
+import Test.QuickCheck (listOf, Gen, choose)
 import Control.Monad (replicateM)
-
-import Control.Monad.Writer
-
 import Data.Scientific (fromFloatDigits)
 
 import qualified Data.Text as T

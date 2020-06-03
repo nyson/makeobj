@@ -74,9 +74,7 @@ executable makeobj-web-app
                      , scotty
                      , wai-extra
                      , wai-middleware-static
-                     -- , containers
-                     -- , bytestring
-                     -- , QuickCheck
+                     , directory
   hs-source-dirs:      web-app
   default-language:    Haskell2010
                        
