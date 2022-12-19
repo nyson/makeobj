@@ -17,15 +17,17 @@ import Data.Scientific (fromFloatDigits)
 import qualified Data.Text as T
 import qualified Data.Vector as V
 import qualified Text.Reggie as R
+import qualified Data.Aeson.KeyMap as KM
+import qualified Data.Aeson.Key as Key
 
 generateObj :: Defs -> GenerateTree -> Gen Value
 generateObj defs = \case
   GRx rx -> String . T.pack <$> R.rxGen rx
   GType tl -> case Prelude.lookup tl (unDefs defs) of
-      Nothing -> fail $ "Missing typedef: " ++ pp tl
+      Nothing -> error $ "Missing typedef: " ++ pp tl
       Just gt -> generateObj defs gt
-  GObj obj -> Object . HM.fromList <$> mapM f (HM.toList obj)
-    where f (a, t) = (a,) <$> generateObj defs t
+  GObj obj -> Object . KM.fromList <$> mapM f (HM.toList obj)
+    where f (k, t) = (Key.fromText k,) <$> generateObj defs t
   GList t -> Array . V.fromList <$> generateList defs t
   GRange (IntRange a b) -> Number . fromIntegral <$> choose (a , b)
   GRange (FloatRange a b) -> Number . fromFloatDigits <$> choose (a, b)

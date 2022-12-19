@@ -47,12 +47,7 @@ instance Semigroup Meta where
 
 instance Monoid Meta where
   mempty = Meta 0 0 [] HashMap.empty
-  mappend (Meta gn unb defs leafsA) (Meta gn' unb' defs' leafs')
-    = Meta { maxGeneratedNodes = gn + gn'
-           , unboundNodes = unb + unb'
-           , defsRequired = defs ++ defs'
-           , leafCounts = HashMap.unionWith (+) leafsA leafs'
-           }
+  mappend = (<>)
   mconcat metas = Meta
     { maxGeneratedNodes= sum $ map maxGeneratedNodes metas
     , unboundNodes= sum $ map unboundNodes metas
