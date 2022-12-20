@@ -134,3 +134,16 @@ assertRight lbl = assertBool lbl . \case
 
 unit_canParseTree :: Assertion
 unit_canParseTree = assertRight "can parse tree" $ parseGenerateTree treeDef
+
+unit_canParseBothQuotedAndUnQuotedKeys :: Assertion
+unit_canParseBothQuotedAndUnQuotedKeys
+  = assertRight "can parse both quoted and unquoted keys"
+    $ parseGenerateTree [r|{
+      "key": /value/,
+      key2: /value2/
+    }|]
+
+unit_stringLiteralsCanContainLotsOfChars :: Assertion
+unit_stringLiteralsCanContainLotsOfChars 
+  = assertRight "string literals can contain lots of different characters"
+    $ parseGenerateTree [r|"hej och hå 12390214¤&!¤&!?¤&=¤/)¤/!&||<"|]

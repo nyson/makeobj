@@ -4,9 +4,11 @@ import Data.Text (Text)
 import Data.HashMap.Strict (HashMap)
 import Text.Reggie (Regex)
 import Data.Functor (($>))
+import Control.Applicative ((<|>))
 import qualified Text.Reggie as Rx
 import qualified Data.HashMap.Strict as HM
 import qualified Text.Megaparsec.Char.Lexer as L
+import qualified Text.Megaparsec as M
 import qualified Data.Text as T
 
 import Data.MakeObj.Parser.Time (timeLiteral)
@@ -54,7 +56,7 @@ value = label "Value Parser"
               , chars "false" $> False
               ]
         limitedString = T.pack <$>
-          sc (char '"' *> many letterChar <* char '"')
+          sc (char '"' *> many (M.satisfy (/= '"')) <* char '"')
 
 rxChar :: Parser Char
 rxChar = label "Char" . choice $ letterChar
@@ -105,5 +107,9 @@ object = label "Object" $ HM.fromList
       <$> sc mkMapItem
       <*> many (sc (char ',') *> sc mkMapItem)
     mkMapItem = (,)
-      <$> (T.pack <$> many letterChar)
+      <$> (T.pack <$> mkKey)
       <*> (sc (char ':') *> tree)
+    mkKey = choice 
+      [ char '"' *> many (M.satisfy (/= '"')) <* char '"'
+      , many (letterChar <|> digitChar) 
+      ]
