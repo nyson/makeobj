@@ -1,7 +1,6 @@
-resolver: lts-14.21
+resolver: lts-20.3
 
 extra-deps:
-  - todo-0.2.0.2
-  - aeson-pretty-0.8.8
+  - todo-0.2.0.3
   - git: https://gitlab.com/nyson/reggie.git
     commit: a5476dcfaca0e19128a43ae7acb4647b6fd37167

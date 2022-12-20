@@ -3,7 +3,7 @@ cabal-version:       >=1.10
 -- For further documentation, see http://haskell.org/cabal/users-guide/
 
 name:                makeobj
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            generate an object from a template
 -- description:
 -- bug-reports:
@@ -29,7 +29,7 @@ library
                  , Data.MakeObj.TreeEquality
   -- other-modules:
   -- other-extensions:
-  build-depends:       base >=4.12 && <4.13
+  build-depends:       base >=4.12 && <4.17
                      , aeson
                      , mtl
                      , bytestring
@@ -53,7 +53,7 @@ executable makeobj
                      , Definitions 
 
   -- other-extensions:
-  build-depends:       base >=4.12 && <4.13
+  build-depends:       base >=4.12 && <4.17
                      , makeobj
                      , aeson
                      , aeson-pretty
@@ -68,7 +68,7 @@ executable makeobj-web-app
   main-is:             Main.hs
 
   -- other-extensions:
-  build-depends:       base >=4.12 && <4.13
+  build-depends:       base >=4.12 && <4.17
                      , makeobj
                      , aeson
                      , scotty
@@ -83,7 +83,7 @@ test-suite test
     main-is:    Spec.hs
     other-modules: MakeTest, TimeTest
     build-depends: aeson
-                 , base >= 4.11
+                 , base >=4.12 && <4.17
                  , makeobj
                  , megaparsec
                  , QuickCheck

@@ -5,36 +5,26 @@
 
 packages:
 - completed:
-    hackage: todo-0.2.0.2@sha256:a80b711db67d000ac929d35bcecfe3d22b5e3231f958bcf61cb447ba03e18ad4,722
+    hackage: todo-0.2.0.3@sha256:87db5ccfc8294a44190398ad760c277cb7a3d666f7be34b407f879eba14eb803,752
     pantry-tree:
+      sha256: 39a5b9251293f7564c884482764c6bbcfa56c0ee11c076beafcb979d79805911
       size: 253
-      sha256: 517cf2e9d8c0a21d0244902e378ab1e09203ad57b3f12fd7167c78e40fad1a65
   original:
-    hackage: todo-0.2.0.2
+    hackage: todo-0.2.0.3
 - completed:
-    hackage: aeson-pretty-0.8.8@sha256:9924a16d0c362ff59dd6d5b875749ff5d599d2688f89d080388a0014714441ef,2291
-    pantry-tree:
-      size: 337
-      sha256: 0e6cc718e70c2cc51726570f2faed6f5cd56e0c23a546198cca2a217213ccc43
-  original:
-    hackage: aeson-pretty-0.8.8
-- completed:
-    cabal-file:
-      size: 1744
-      sha256: c1f819730aa036865b81de96690423ed73a27005c15958a454bd6460d6e07060
+    commit: a5476dcfaca0e19128a43ae7acb4647b6fd37167
+    git: https://gitlab.com/nyson/reggie.git
     name: reggie
-    version: 0.1.0.0
-    git: https://gitlab.com/nyson/reggie.git
     pantry-tree:
-      size: 1060
       sha256: ada05d8fb9b16e3693cc4655b2cbf40cb16e917feaaa5aab66a400d869cafdd6
-    commit: a5476dcfaca0e19128a43ae7acb4647b6fd37167
+      size: 1060
+    version: 0.1.0.0
   original:
-    git: https://gitlab.com/nyson/reggie.git
     commit: a5476dcfaca0e19128a43ae7acb4647b6fd37167
+    git: https://gitlab.com/nyson/reggie.git
 snapshots:
 - completed:
-    size: 524162
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/21.yaml
-    sha256: 9a55dd75853718f2bbbe951872b36a3b7802fcd71796e0f25b8664f24e34c666
-  original: lts-14.21
+    sha256: 03cec7d96ed78877b03b5c2bc5e31015b47f69af2fe6a62d994a42b7a43c5805
+    size: 648659
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/3.yaml
+  original: lts-20.3
